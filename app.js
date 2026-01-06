@@ -439,8 +439,168 @@ if (lastActiveTab && ['custom', 'imdbTop100', 'topByYear', 'favorites', 'watchli
   switchTab('custom');
 }
 
+// ===== TOP 10 BY YEAR (PHASE 8) =====
+
+// Fetch top 10 movies by year from TMDB Discover API
+async function fetchTopMoviesByYear(year) {
+  await rateLimiter.throttle();
+
+  try {
+    // TMDB Discover API with filters for year and minimum vote count
+    const url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&primary_release_year=${year}&sort_by=vote_average.desc&vote_count.gte=100&page=1`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new MovieGridError('Rate limit exceeded', 'RATE_LIMIT');
+      }
+      throw new MovieGridError('API request failed', 'API_ERROR', { status: response.status });
+    }
+
+    const data = await response.json();
+
+    if (data.results && data.results.length > 0) {
+      // Get top 10 movies
+      const top10 = data.results.slice(0, 10);
+
+      return top10.map(movie => ({
+        id: movie.id,
+        title: movie.title,
+        posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
+        releaseDate: movie.release_date,
+        rating: movie.vote_average,
+        voteCount: movie.vote_count
+      }));
+    }
+
+    return [];
+
+  } catch (error) {
+    if (error instanceof MovieGridError) {
+      throw error;
+    }
+    throw new MovieGridError('Network error', 'NETWORK_ERROR', { originalError: error.message });
+  }
+}
+
+// Render year grid
+function renderYearGrid(movies) {
+  const yearGrid = document.getElementById('yearGrid');
+  if (!yearGrid) return;
+
+  // Clear existing grid
+  yearGrid.innerHTML = '';
+
+  // Create poster elements
+  movies.forEach(movie => {
+    const posterElement = createMoviePoster(movie.posterPath, movie.title);
+    yearGrid.appendChild(posterElement);
+  });
+
+  // Initialize drag-and-drop for year grid
+  new Sortable(yearGrid, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    forceFallback: true,
+    touchStartThreshold: 5
+  });
+}
+
+// Load movies for selected year
+async function loadMoviesByYear() {
+  const yearSelect = document.getElementById('yearSelect');
+  const loadYearBtn = document.getElementById('loadYearBtn');
+  const yearProgress = document.getElementById('yearProgress');
+  const yearGrid = document.getElementById('yearGrid');
+
+  if (!yearSelect || !yearGrid) return;
+
+  const selectedYear = parseInt(yearSelect.value);
+
+  // Check cache first
+  const cacheKey = `year_${selectedYear}`;
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    try {
+      const movies = JSON.parse(cached);
+      renderYearGrid(movies);
+      gridState.tabs.topByYear.movies = movies;
+      console.log(`Loaded ${movies.length} movies from cache for year ${selectedYear}`);
+      return;
+    } catch (e) {
+      console.warn('Cache parse error, fetching fresh data');
+    }
+  }
+
+  // Disable button and show progress
+  if (loadYearBtn) loadYearBtn.disabled = true;
+  if (yearProgress) {
+    yearProgress.textContent = `Loading top 10 movies from ${selectedYear}...`;
+    yearProgress.classList.add('active');
+  }
+
+  try {
+    // Fetch movies
+    const movies = await fetchTopMoviesByYear(selectedYear);
+
+    if (movies.length === 0) {
+      if (yearProgress) {
+        yearProgress.textContent = `No movies found for ${selectedYear}`;
+      }
+      setTimeout(() => {
+        if (yearProgress) yearProgress.classList.remove('active');
+      }, 3000);
+      return;
+    }
+
+    // Render grid
+    renderYearGrid(movies);
+
+    // Update state
+    gridState.tabs.topByYear.movies = movies;
+    gridState.tabs.topByYear.year = selectedYear;
+
+    // Save to cache
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(movies));
+    } catch (e) {
+      console.warn('Failed to cache year results:', e);
+    }
+
+    // Hide progress
+    if (yearProgress) {
+      yearProgress.textContent = `Loaded ${movies.length} top movies from ${selectedYear}!`;
+      setTimeout(() => {
+        yearProgress.classList.remove('active');
+      }, 2000);
+    }
+
+    console.log(`Loaded ${movies.length} movies for year ${selectedYear}`);
+
+  } catch (error) {
+    console.error('Failed to load movies by year:', error);
+    if (yearProgress) {
+      yearProgress.textContent = error.message || 'Failed to load movies. Please try again.';
+      yearProgress.style.color = '#f44336';
+      setTimeout(() => {
+        yearProgress.classList.remove('active');
+        yearProgress.style.color = '';
+      }, 5000);
+    }
+  } finally {
+    if (loadYearBtn) loadYearBtn.disabled = false;
+  }
+}
+
+// Add event listener to Load Movies button
+const loadYearBtn = document.getElementById('loadYearBtn');
+if (loadYearBtn) {
+  loadYearBtn.addEventListener('click', loadMoviesByYear);
+}
+
 // ===== INITIALIZATION =====
-console.log('MovieGrid initialized - Phase 3: Tab Navigation');
+console.log('MovieGrid initialized - Phase 8: Top 10 by Year');
 console.log('State management:', gridState);
 console.log('TMDB API configured:', TMDB_BASE_URL);
 console.log('Active tab:', gridState.activeTab);
