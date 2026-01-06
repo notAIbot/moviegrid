@@ -173,8 +173,13 @@ async function searchMovie(title) {
         : null;
 
       if (posterUrl) {
-        saveToCache(title, posterUrl);
-        return posterUrl;
+        const movieData = {
+          posterUrl: posterUrl,
+          id: movie.id,
+          title: movie.title
+        };
+        saveToCache(title, movieData);
+        return movieData;
       }
     }
 
@@ -191,18 +196,40 @@ async function searchMovie(title) {
 // ===== UI HELPER FUNCTIONS =====
 
 // Create movie poster element
-function createMoviePoster(posterUrl, title) {
+function createMoviePoster(posterUrl, title, movieId) {
   const div = document.createElement('div');
   div.className = 'movie-poster';
 
-  if (posterUrl) {
-    const img = document.createElement('img');
-    img.src = posterUrl;
-    img.alt = title;
-    div.appendChild(img);
+  // Wrap in link if we have a movie ID
+  if (movieId) {
+    const link = document.createElement('a');
+    link.href = `https://www.themoviedb.org/movie/${movieId}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.className = 'poster-link';
+
+    if (posterUrl) {
+      const img = document.createElement('img');
+      img.src = posterUrl;
+      img.alt = title;
+      link.appendChild(img);
+    } else {
+      link.classList.add('placeholder');
+      link.textContent = 'No poster found';
+    }
+
+    div.appendChild(link);
   } else {
-    div.classList.add('placeholder');
-    div.textContent = 'No poster found';
+    // No movie ID, show non-clickable poster
+    if (posterUrl) {
+      const img = document.createElement('img');
+      img.src = posterUrl;
+      img.alt = title;
+      div.appendChild(img);
+    } else {
+      div.classList.add('placeholder');
+      div.textContent = 'No poster found';
+    }
   }
 
   return div;
@@ -302,13 +329,14 @@ async function generateGrid() {
     setLoading(true, `Fetching posters... (${i + 1}/${movies.length})`);
 
     try {
-      const posterUrl = await searchMovie(movie);
-      const posterElement = createMoviePoster(posterUrl, movie);
+      const movieData = await searchMovie(movie);
+      const posterElement = createMoviePoster(movieData.posterUrl, movie, movieData.id);
       movieGrid.appendChild(posterElement);
 
       gridState.tabs.custom.movies.push({
         title: movie,
-        posterUrl
+        posterUrl: movieData.posterUrl,
+        id: movieData.id
       });
 
     } catch (error) {
@@ -493,7 +521,7 @@ function renderYearGrid(movies) {
 
   // Create poster elements
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id);
     yearGrid.appendChild(posterElement);
   });
 
