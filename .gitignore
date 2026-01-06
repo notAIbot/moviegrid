@@ -1,0 +1,22 @@
+# TMDB API Configuration (contains private API key)
+config.js
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Node modules (if we add them later)
+node_modules/
+
+# Cache directories
+.cache/

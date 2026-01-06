@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieGrid: Turn Your Movie List Into a Visual Grid for Instagram</title>
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- SortableJS for drag-and-drop -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>MovieGrid</h1>
+      <p class="subtitle">Turn your movie list into an image-only poster grid to easily share.</p>
+    </header>
+    
+    <div class="input-section">
+      <h2>Paste Your Movie List</h2>
+      <p>Enter one movie per line with the title.</p>
+      <textarea id="movieInput" placeholder="Example:
+The Shawshank Redemption
+The Godfather
+Inception
+The Dark Knight"></textarea>
+      
+      <input
+        type="text"
+        id="customTitle"
+        class="custom-title-input"
+        placeholder="Optional: Add a custom title for your grid (e.g., 'My Favorite Movies 2025')"
+      >
+
+      <button id="generateBtn">Generate Movie Grid</button>
+      
+      <div id="progress" class="progress"></div>
+    </div>
+    
+    <div id="outputSection" class="output-section">
+      <div class="instructions">
+        <h3>How to Share Your Grid</h3>
+        <p><strong>Drag to reorder:</strong> Click and drag posters to rearrange them.</p>
+        <p><strong>Screenshot:</strong> Use your device's screenshot tool to capture the grid below.</p>
+      </div>
+
+      <div class="grid-frame" id="gridFrame">
+        <div id="gridTitle" class="grid-title"></div>
+        <div id="movieGrid" class="movie-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration (TMDB API key) -->
+  <script src="config.js"></script>
+
+  <!-- Main JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>

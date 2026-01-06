@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMDB to JSON Converter</title>
+  <style>
+    body {
+      font-family: monospace;
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #0f0;
+    }
+    h1 {
+      color: #0f0;
+    }
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 20px 0;
+    }
+    button:hover {
+      background: #0c0;
+    }
+    #log {
+      background: #000;
+      padding: 20px;
+      border: 2px solid #0f0;
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 12px;
+    }
+    .warning {
+      color: #ff0;
+      margin: 20px 0;
+      padding: 15px;
+      border: 2px solid #ff0;
+      background: rgba(255, 255, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>IMDB Top 100 to JSON Converter</h1>
+
+  <div class="warning">
+    <strong>⚠️ Important:</strong> This will make ~100 API requests to TMDB.
+    It will take about 3-5 minutes due to rate limiting (40 requests per 10 seconds).
+  </div>
+
+  <button id="startBtn" onclick="runConversion()">Start Conversion</button>
+
+  <div id="log"></div>
+
+  <!-- Load config first -->
+  <script src="config.js"></script>
+
+  <!-- Load conversion script -->
+  <script src="convert_imdb_to_json.js"></script>
+
+  <script>
+    const logDiv = document.getElementById('log');
+    const startBtn = document.getElementById('startBtn');
+
+    // Override console.log to display in the page
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      logDiv.textContent += args.join(' ') + '\n';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    };
+
+    const originalError = console.error;
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      logDiv.textContent += 'ERROR: ' + args.join(' ') + '\n';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    };
+
+    async function runConversion() {
+      startBtn.disabled = true;
+      startBtn.textContent = 'Converting... Please wait';
+      logDiv.textContent = '';
+
+      try {
+        await convertIMDBToJSON();
+        startBtn.textContent = 'Conversion Complete! ✓';
+        startBtn.style.background = '#0c0';
+      } catch (error) {
+        startBtn.textContent = 'Conversion Failed ✗';
+        startBtn.style.background = '#f00';
+        startBtn.disabled = false;
+      }
+    }
+
+    console.log('Ready! Click "Start Conversion" to begin.');
+    console.log('The JSON file will be downloaded automatically when complete.');
+  </script>
+</body>
+</html>
