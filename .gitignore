@@ -1,6 +1,3 @@
-# TMDB API Configuration (contains private API key)
-config.js
-
 # Operating System Files
 .DS_Store
 Thumbs.db
