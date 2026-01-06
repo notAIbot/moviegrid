@@ -349,7 +349,98 @@ movieInput.addEventListener('keydown', (e) => {
   }
 });
 
+// ===== TAB NAVIGATION (PHASE 3) =====
+
+// Tab switching functionality
+function switchTab(tabName) {
+  // Update state
+  gridState.activeTab = tabName;
+
+  // Save to localStorage
+  localStorage.setItem(STORAGE_KEYS.LAST_TAB, tabName);
+
+  // Update button states
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  tabButtons.forEach(btn => {
+    if (btn.dataset.tab === tabName) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Update content visibility
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabContents.forEach(content => {
+    content.classList.remove('active');
+  });
+
+  // Show selected tab
+  const tabIdMap = {
+    custom: 'customTab',
+    imdbTop100: 'imdbTop100Tab',
+    topByYear: 'topByYearTab',
+    favorites: 'favoritesTab',
+    watchlist: 'watchlistTab'
+  };
+
+  const selectedTab = document.getElementById(tabIdMap[tabName]);
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+  }
+
+  console.log(`Switched to tab: ${tabName}`);
+}
+
+// Add event listeners to tab buttons
+const tabButtons = document.querySelectorAll('.tab-btn');
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabName = btn.dataset.tab;
+    switchTab(tabName);
+  });
+});
+
+// Populate year selector (1900 - current year)
+const yearSelect = document.getElementById('yearSelect');
+if (yearSelect) {
+  const currentYear = new Date().getFullYear();
+  for (let year = currentYear; year >= 1900; year--) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
+  }
+
+  // Load last selected year from localStorage
+  const lastYear = localStorage.getItem(STORAGE_KEYS.LAST_YEAR);
+  if (lastYear) {
+    yearSelect.value = lastYear;
+    gridState.tabs.topByYear.year = parseInt(lastYear);
+  } else {
+    yearSelect.value = currentYear;
+    gridState.tabs.topByYear.year = currentYear;
+  }
+
+  // Save year selection to localStorage
+  yearSelect.addEventListener('change', () => {
+    const selectedYear = parseInt(yearSelect.value);
+    gridState.tabs.topByYear.year = selectedYear;
+    localStorage.setItem(STORAGE_KEYS.LAST_YEAR, selectedYear);
+  });
+}
+
+// Load last active tab from localStorage
+const lastActiveTab = localStorage.getItem(STORAGE_KEYS.LAST_TAB);
+if (lastActiveTab && ['custom', 'imdbTop100', 'topByYear', 'favorites', 'watchlist'].includes(lastActiveTab)) {
+  switchTab(lastActiveTab);
+} else {
+  // Default to custom tab
+  switchTab('custom');
+}
+
 // ===== INITIALIZATION =====
-console.log('MovieGrid initialized - Phase 1: Foundation');
+console.log('MovieGrid initialized - Phase 3: Tab Navigation');
 console.log('State management:', gridState);
 console.log('TMDB API configured:', TMDB_BASE_URL);
+console.log('Active tab:', gridState.activeTab);

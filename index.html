@@ -17,8 +17,19 @@
       <h1>MovieGrid</h1>
       <p class="subtitle">Turn your movie list into an image-only poster grid to easily share.</p>
     </header>
-    
-    <div class="input-section">
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="custom">Custom Grid</button>
+      <button class="tab-btn" data-tab="imdbTop100">IMDB Top 100</button>
+      <button class="tab-btn" data-tab="topByYear">Top 10 by Year</button>
+      <button class="tab-btn" data-tab="favorites">My Favorites</button>
+      <button class="tab-btn" data-tab="watchlist">My Watchlist</button>
+    </nav>
+
+    <!-- Custom Grid Tab -->
+    <div class="tab-content active" id="customTab">
+      <div class="input-section">
       <h2>Paste Your Movie List</h2>
       <p>Enter one movie per line with the title.</p>
       <textarea id="movieInput" placeholder="Example:
@@ -50,7 +61,68 @@ The Dark Knight"></textarea>
         <div id="gridTitle" class="grid-title"></div>
         <div id="movieGrid" class="movie-grid"></div>
       </div>
+      </div>
     </div>
+
+    <!-- IMDB Top 100 Tab -->
+    <div class="tab-content" id="imdbTop100Tab">
+      <div class="tab-header">
+        <h2>IMDB Top 100 Movies</h2>
+        <p>Explore the highest-rated movies of all time according to IMDB.</p>
+      </div>
+      <div id="imdbProgress" class="progress"></div>
+      <div class="grid-frame">
+        <div id="imdbGrid" class="movie-grid"></div>
+      </div>
+    </div>
+
+    <!-- Top 10 by Year Tab -->
+    <div class="tab-content" id="topByYearTab">
+      <div class="tab-header">
+        <h2>Top 10 Movies by Year</h2>
+        <p>Select a year to see the top-rated movies released that year.</p>
+      </div>
+      <div class="year-selector">
+        <label for="yearSelect">Select Year:</label>
+        <select id="yearSelect">
+          <!-- Years will be populated by JavaScript -->
+        </select>
+        <button id="loadYearBtn">Load Movies</button>
+      </div>
+      <div id="yearProgress" class="progress"></div>
+      <div class="grid-frame">
+        <div id="yearGrid" class="movie-grid"></div>
+      </div>
+    </div>
+
+    <!-- My Favorites Tab -->
+    <div class="tab-content" id="favoritesTab">
+      <div class="tab-header">
+        <h2>My Favorites</h2>
+        <p>Your saved favorite movies.</p>
+      </div>
+      <div id="favoritesEmpty" class="empty-state">
+        <p>No favorites yet! Add movies from other tabs to start building your collection.</p>
+      </div>
+      <div class="grid-frame">
+        <div id="favoritesGrid" class="movie-grid"></div>
+      </div>
+    </div>
+
+    <!-- My Watchlist Tab -->
+    <div class="tab-content" id="watchlistTab">
+      <div class="tab-header">
+        <h2>My Watchlist</h2>
+        <p>Movies you want to watch.</p>
+      </div>
+      <div id="watchlistEmpty" class="empty-state">
+        <p>Your watchlist is empty! Add movies from other tabs to remember what you want to watch.</p>
+      </div>
+      <div class="grid-frame">
+        <div id="watchlistGrid" class="movie-grid"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Configuration (TMDB API key) -->
