@@ -1,6 +1,4 @@
-// TMDB API Configuration
-// IMPORTANT: Do not commit this file to git!
-// This file contains your private API key
+
 
 const CONFIG = {
   TMDB_API_KEY: '258f275d54c441bf4329b8545cd698cb',
