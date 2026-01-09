@@ -20,9 +20,10 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 - Drag-and-drop to reorder movies
 - Screenshot and share instantly
 
-### 🌟 TMDB Top 100
-- Pre-loaded grid of the 100 most popular movies
-- Based on TMDB's popularity rankings
+### 🌟 TMDB Top Rated
+- Pre-loaded grid of the 100 highest-rated movies
+- Based on TMDB's official top-rated rankings
+- Matches the movies from [TMDB Top Rated](https://www.themoviedb.org/movie/top-rated)
 - One-click loading with progress tracking
 - Cached for fast subsequent loads
 
@@ -43,7 +44,7 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 1. **Visit the app:** [https://notAIbot.github.io/moviegrid/](https://notAIbot.github.io/moviegrid/)
 2. **Choose a tab:**
    - **Custom Grid:** Paste your movie titles
-   - **TMDB Top 100:** Browse popular movies
+   - **TMDB Top Rated:** Browse highest-rated movies
    - **Top 10 by Year:** Select a year to explore
 3. **Customize:** Drag posters to reorder them
 4. **Share:** Take a screenshot and post to social media
@@ -77,7 +78,7 @@ The app includes smart rate limiting and caching to stay within these limits.
 
 ✅ **Live & Functional:**
 - Custom movie grid creation
-- TMDB Top 100 browser
+- TMDB Top Rated browser (matches official TMDB rankings)
 - Top 10 movies by year
 - Drag-and-drop reordering
 - Responsive design

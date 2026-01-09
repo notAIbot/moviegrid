@@ -644,8 +644,8 @@ async function fetchTMDBTop100() {
     for (let page = 1; page <= totalPages; page++) {
       await rateLimiter.throttle();
 
-      // Using discover endpoint with sort by popularity and minimum vote count for quality
-      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&vote_count.gte=1000&page=${page}`;
+      // Using TMDB's official top_rated endpoint to match their website
+      const url = `${TMDB_BASE_URL}/movie/top_rated?api_key=${TMDB_API_KEY}&page=${page}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -718,8 +718,8 @@ async function loadTMDBTop100() {
     return;
   }
 
-  // Check cache first
-  const cacheKey = 'tmdb_top_100';
+  // Check cache first (v2 = using top_rated endpoint)
+  const cacheKey = 'tmdb_top_rated_v2';
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -737,7 +737,7 @@ async function loadTMDBTop100() {
 
   // Show progress
   if (imdbProgress) {
-    imdbProgress.textContent = 'Loading TMDB Top 100 movies... (This may take a moment)';
+    imdbProgress.textContent = 'Loading TMDB Top Rated movies... (This may take a moment)';
     imdbProgress.classList.add('active');
   }
 
@@ -777,7 +777,7 @@ async function loadTMDBTop100() {
       }, 2000);
     }
 
-    console.log(`Loaded ${movies.length} movies for TMDB Top 100`);
+    console.log(`Loaded ${movies.length} top-rated movies from TMDB`);
 
   } catch (error) {
     console.error('Failed to load TMDB Top 100:', error);
