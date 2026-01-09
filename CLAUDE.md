@@ -272,8 +272,9 @@ const gridState = {
 - **Jan 5, 2025:** Tab-based navigation (5 grid types)
 - **Jan 5, 2025:** (Revised) Fetch top movies directly from TMDB API instead of converting IMDB txt to JSON
 - **Jan 9, 2026:** Using TMDB API for Top 100 movies instead of static IMDB list
+- **Jan 9, 2026:** Cinema-themed popcorn texture background with dark theater colors
 - **Jan 6, 2026:** Commit config.js with API key to enable GitHub Pages (public API key approach)
-- **Jan 6, 2026:** Light blue color theme for movie/cinema aesthetic
+- **Jan 6, 2026:** Light blue color theme for movie/cinema aesthetic (replaced in Session 4)
 - **Jan 6, 2026:** Hollywood-style title with 3D text shadow and serif font
 
 ## Commit Message Style
@@ -349,6 +350,18 @@ const gridState = {
   - Reuse existing drag-and-drop and poster display logic
   - Auto-load prevents users from needing manual trigger
 
+**Jan 9, 2026 (Session 4 - Cinema Background Design):**
+- Replaced light blue gradient background with cinema-themed popcorn texture
+- Design features:
+  - Dark theater atmosphere with burgundy/purple velvet curtain gradient
+  - Subtle floating popcorn kernel pattern using radial gradients
+  - 24-second animation cycle for gentle motion effect
+  - Keeps movie posters prominent while adding immersive cinema vibe
+- CSS implementation:
+  - 9 layered radial gradients for popcorn texture
+  - Animated background positions for floating effect
+  - Dark base colors (#1a0a0f to #2d1b3d) for theater aesthetic
+
 ## Known Issues
 - Favorites tab not functional yet (Phase 6 pending)
 - Watchlist tab not functional yet (Phase 7 pending)
@@ -364,9 +377,10 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
+  - `874617d` - Add cinema-themed popcorn texture background (Session 4)
+  - `220e224` - TMDB Top 100 implementation (Session 3)
   - `4e2f5bf` - Add config.js for GitHub Pages deployment
   - `e866b7f` - Phase 3: Tab Navigation
-  - `4ff9ab1` - Phase 0 & Phase 1: Setup and Foundation
 
 ## Future Ideas (Post-MVP)
 - Share grids as images
