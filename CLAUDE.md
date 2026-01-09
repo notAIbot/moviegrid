@@ -205,10 +205,10 @@ const gridState = {
 - `movieData_lastYear` - Remember last selected year
 
 ### Files to Modify (from plan):
-1. `/Users/k2ey/vm-claude-project/Projects/movie_grid/index.html` - Add tabs, update text
-2. `/Users/k2ey/vm-claude-project/Projects/movie_grid/app.js` - TMDB API, state management
-3. `/Users/k2ey/vm-claude-project/Projects/movie_grid/styles.css` - Tab styles, action buttons
-4. `/Users/k2ey/vm-claude-project/Projects/movie_grid/README.md` - Update documentation
+1. `index.html` - Add tabs, update text
+2. `app.js` - TMDB API, state management
+3. `styles.css` - Tab styles, action buttons
+4. `README.md` - Update documentation
 
 ### New Files to Create:
 - `config.js` - TMDB API key (now committed for GitHub Pages)
@@ -356,7 +356,7 @@ const gridState = {
 - TMDB Top 100 fetches movies by popularity, not by actual IMDB ratings (TMDB API limitation)
 
 ## Plan File Location
-Full detailed plan: `/Users/k2ey/.claude/plans/fancy-yawning-pearl.md`
+Full detailed plan: See git history and commit messages for implementation details
 
 ## Repository Status
 - **Branch:** main
