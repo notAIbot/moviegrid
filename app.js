@@ -417,6 +417,11 @@ function switchTab(tabName) {
     selectedTab.classList.add('active');
   }
 
+  // Auto-load TMDB Top 100 when tab is clicked
+  if (tabName === 'imdbTop100') {
+    loadTMDBTop100();
+  }
+
   console.log(`Switched to tab: ${tabName}`);
 }
 
@@ -627,8 +632,168 @@ if (loadYearBtn) {
   loadYearBtn.addEventListener('click', loadMoviesByYear);
 }
 
+// ===== TMDB TOP 100 (PHASE 5) =====
+
+// Fetch top 100 movies from TMDB
+async function fetchTMDBTop100() {
+  const movies = [];
+  const moviesPerPage = 20;
+  const totalPages = 5; // 5 pages × 20 movies = 100 movies
+
+  try {
+    for (let page = 1; page <= totalPages; page++) {
+      await rateLimiter.throttle();
+
+      // Using discover endpoint with sort by popularity and minimum vote count for quality
+      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&vote_count.gte=1000&page=${page}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new MovieGridError('Rate limit exceeded', 'RATE_LIMIT');
+        }
+        throw new MovieGridError('API request failed', 'API_ERROR', { status: response.status });
+      }
+
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const pageMovies = data.results.map(movie => ({
+          id: movie.id,
+          title: movie.title,
+          posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
+          releaseDate: movie.release_date,
+          rating: movie.vote_average,
+          voteCount: movie.vote_count,
+          popularity: movie.popularity
+        }));
+
+        movies.push(...pageMovies);
+      }
+    }
+
+    return movies;
+
+  } catch (error) {
+    if (error instanceof MovieGridError) {
+      throw error;
+    }
+    throw new MovieGridError('Network error', 'NETWORK_ERROR', { originalError: error.message });
+  }
+}
+
+// Render TMDB Top 100 grid
+function renderTMDBTop100Grid(movies) {
+  const imdbGrid = document.getElementById('imdbGrid');
+  if (!imdbGrid) return;
+
+  // Clear existing grid
+  imdbGrid.innerHTML = '';
+
+  // Create poster elements
+  movies.forEach(movie => {
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id);
+    imdbGrid.appendChild(posterElement);
+  });
+
+  // Initialize drag-and-drop for TMDB grid
+  new Sortable(imdbGrid, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    forceFallback: true,
+    touchStartThreshold: 5
+  });
+}
+
+// Load TMDB Top 100 movies
+async function loadTMDBTop100() {
+  const imdbProgress = document.getElementById('imdbProgress');
+  const imdbGrid = document.getElementById('imdbGrid');
+
+  if (!imdbGrid) return;
+
+  // If already loaded, don't reload
+  if (gridState.tabs.imdbTop100.loaded && gridState.tabs.imdbTop100.movies.length > 0) {
+    console.log('TMDB Top 100 already loaded');
+    return;
+  }
+
+  // Check cache first
+  const cacheKey = 'tmdb_top_100';
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    try {
+      const movies = JSON.parse(cached);
+      renderTMDBTop100Grid(movies);
+      gridState.tabs.imdbTop100.movies = movies;
+      gridState.tabs.imdbTop100.loaded = true;
+      console.log(`Loaded ${movies.length} movies from cache for TMDB Top 100`);
+      return;
+    } catch (e) {
+      console.warn('Cache parse error, fetching fresh data');
+    }
+  }
+
+  // Show progress
+  if (imdbProgress) {
+    imdbProgress.textContent = 'Loading TMDB Top 100 movies... (This may take a moment)';
+    imdbProgress.classList.add('active');
+  }
+
+  try {
+    // Fetch movies
+    const movies = await fetchTMDBTop100();
+
+    if (movies.length === 0) {
+      if (imdbProgress) {
+        imdbProgress.textContent = 'No movies found';
+      }
+      setTimeout(() => {
+        if (imdbProgress) imdbProgress.classList.remove('active');
+      }, 3000);
+      return;
+    }
+
+    // Render grid
+    renderTMDBTop100Grid(movies);
+
+    // Update state
+    gridState.tabs.imdbTop100.movies = movies;
+    gridState.tabs.imdbTop100.loaded = true;
+
+    // Save to cache
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(movies));
+    } catch (e) {
+      console.warn('Failed to cache TMDB Top 100 results:', e);
+    }
+
+    // Hide progress
+    if (imdbProgress) {
+      imdbProgress.textContent = `Loaded ${movies.length} top movies!`;
+      setTimeout(() => {
+        imdbProgress.classList.remove('active');
+      }, 2000);
+    }
+
+    console.log(`Loaded ${movies.length} movies for TMDB Top 100`);
+
+  } catch (error) {
+    console.error('Failed to load TMDB Top 100:', error);
+    if (imdbProgress) {
+      imdbProgress.textContent = error.message || 'Failed to load movies. Please try again.';
+      imdbProgress.style.color = '#f44336';
+      setTimeout(() => {
+        imdbProgress.classList.remove('active');
+        imdbProgress.style.color = '';
+      }, 5000);
+    }
+  }
+}
+
 // ===== INITIALIZATION =====
-console.log('MovieGrid initialized - Phase 8: Top 10 by Year');
+console.log('MovieGrid initialized - Phase 5: TMDB Top 100 & Phase 8: Top 10 by Year');
 console.log('State management:', gridState);
 console.log('TMDB API configured:', TMDB_BASE_URL);
 console.log('Active tab:', gridState.activeTab);

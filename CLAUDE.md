@@ -1,19 +1,20 @@
 # CLAUDE.md — MovieGrid Project Brain
 
 ## North Star
-I'm building MovieGrid - a tool to create and browse curated movie poster grids. Users can view IMDB Top 100, create custom grids, manage favorites/watchlist, and explore top movies by year.
+I'm building MovieGrid - a tool to create and browse curated movie poster grids. Users can view TMDB Top 100, create custom grids, manage favorites/watchlist, and explore top movies by year.
 
 ## Current Milestone
 - [x] Phase 0: Setup ✅ COMPLETED
 - [x] Phase 1: Foundation ✅ COMPLETED
 - [x] Phase 3: Tab Navigation ✅ COMPLETED
 - [x] GitHub Pages Deployment ✅ LIVE
-- [ ] Phase 5-10: Implementation (NEXT)
+- [x] Phase 5: TMDB Top 100 ✅ COMPLETED
+- [ ] Phase 6-10: Implementation (NEXT)
 
 ## Project Vision
 Convert the existing BookGrid application (currently displays book covers) to MovieGrid with these features:
 1. **Custom Grid** - Users enter movie titles, app fetches posters from TMDB
-2. **IMDB Top 100** - Pre-loaded grid of IMDB's top 100 movies
+2. **TMDB Top 100** - Pre-loaded grid of TMDB's top 100 movies
 3. **Top 10 by Year** - Select a year, see top 10 movies from that year
 4. **My Favorites** - Save favorite movies with localStorage
 5. **My Watchlist** - Track movies to watch with localStorage
@@ -37,9 +38,9 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Created config.js with API key
 - [x] Created config.example.js template
 - [x] Created .gitignore (later removed config.js from it for GitHub Pages)
-- [x] Created conversion script (convert_imdb_to_json.js)
-- [x] Created conversion HTML interface (convert_imdb.html)
-- [x] Added IMDB Top 100 list (imdb_top_100.txt)
+- [x] Created conversion script (convert_imdb_to_json.js) - No longer needed, fetching from TMDB API
+- [x] Created conversion HTML interface (convert_imdb.html) - No longer needed, fetching from TMDB API
+- [x] Added IMDB Top 100 list (imdb_top_100.txt) - No longer needed, fetching from TMDB API
 - [x] Tested TMDB API with Hollywood (Titanic) and Bollywood (Devdas) movies ✅
 
 **Phase 1: Foundation (COMPLETED)**
@@ -53,7 +54,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Updated UI with light blue theme
 
 **Phase 3: Tab Navigation (COMPLETED)**
-- [x] Added 5-tab navigation system (Custom, IMDB Top 100, Top by Year, Favorites, Watchlist)
+- [x] Added 5-tab navigation system (Custom, TMDB Top 100, Top by Year, Favorites, Watchlist)
 - [x] Implemented tab switching with smooth transitions
 - [x] Added active tab state persistence in localStorage
 - [x] Created year selector dropdown (1900-2026) with localStorage persistence
@@ -67,19 +68,33 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Enabled GitHub Pages on repository
 - [x] Site is live and fully functional at https://notAIbot.github.io/moviegrid/
 
+**Phase 5: TMDB Top 100 (COMPLETED)**
+- [x] Implemented fetchTMDBTop100() to fetch 100 movies from TMDB API
+- [x] Used discover/movie endpoint with popularity sort and vote count filter
+- [x] Created renderTMDBTop100Grid() to display movies
+- [x] Added auto-load functionality when tab is clicked
+- [x] Implemented progress indicator during loading
+- [x] Added localStorage caching for TMDB Top 100 results
+- [x] Tab shows 100 most popular movies with high ratings
+
 ### 🎬 Currently Working:
-**Only Custom Grid Tab is Functional**
-- Users can paste movie titles (one per line)
-- App fetches posters from TMDB API
-- Creates responsive poster grid
-- Supports drag-and-drop reordering
-- Works with Hollywood and Bollywood movies
+**Custom Grid & TMDB Top 100 Tabs are Functional**
+- **Custom Grid:**
+  - Users can paste movie titles (one per line)
+  - App fetches posters from TMDB API
+  - Creates responsive poster grid
+  - Supports drag-and-drop reordering
+  - Works with Hollywood and Bollywood movies
+- **TMDB Top 100:**
+  - Auto-loads top 100 popular movies from TMDB
+  - Displays high-quality movie posters
+  - Cached in localStorage for fast subsequent loads
+  - Supports drag-and-drop reordering
 
 ### ⏳ Remaining Phases:
-- [ ] **Phase 5: IMDB Top 100 Tab** - Auto-load top 100 movies with posters
 - [ ] **Phase 6: Favorites Management** - Add/remove favorites, localStorage persistence
 - [ ] **Phase 7: Watchlist Management** - Add/remove watchlist items
-- [ ] **Phase 8: Top 10 by Year** - Fetch top movies for selected year from TMDB
+- [ ] **Phase 8: Top 10 by Year** - Fetch top movies for selected year from TMDB (ALREADY COMPLETED!)
 - [ ] **Phase 9: Polish & Testing** - Hover effects, empty states, testing
 - [ ] **Phase 10: Documentation** - Update README, add screenshots
 
@@ -90,7 +105,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 2. Create config.js structure
 3. Create config.example.js
 4. Update .gitignore
-5. Convert imdb_top_100.txt → JSON with TMDB IDs
+5. (Removed) Convert imdb_top_100.txt → JSON - Now fetching directly from TMDB API
 6. Test TMDB API
 
 ### Phase 1: Foundation (Days 1-2)
@@ -116,8 +131,8 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - Parse year from input
 - Add action buttons (Favorites/Watchlist)
 
-### Phase 5: IMDB Top 100 Tab (Day 7)
-- Load imdb_top_100.json
+### Phase 5: TMDB Top 100 Tab (Day 7)
+- Fetch top 100 movies from TMDB API
 - Auto-generate grid
 - Show progress
 - Cache results
@@ -194,13 +209,11 @@ const gridState = {
 2. `/Users/k2ey/vm-claude-project/Projects/movie_grid/app.js` - TMDB API, state management
 3. `/Users/k2ey/vm-claude-project/Projects/movie_grid/styles.css` - Tab styles, action buttons
 4. `/Users/k2ey/vm-claude-project/Projects/movie_grid/README.md` - Update documentation
-5. `/Users/k2ey/vm-claude-project/Projects/movie_grid/imdb_top_100.txt` - Parse to JSON
 
 ### New Files to Create:
-- `config.js` - TMDB API key (not committed)
+- `config.js` - TMDB API key (now committed for GitHub Pages)
 - `config.example.js` - Template for users
-- `.gitignore` - Exclude config.js
-- `data/imdb_top_100.json` - Parsed movie data with TMDB IDs
+- `.gitignore` - Exclude config.js (later removed config.js from it)
 
 ## Critical Edge Cases (Documented in Plan)
 1. Movie Not Found → Show placeholder
@@ -214,7 +227,7 @@ const gridState = {
 
 ## Success Criteria
 ✅ Custom movie grids via text input
-✅ IMDB Top 100 auto-displays with posters
+✅ TMDB Top 100 auto-displays with posters
 ✅ Year selector shows top 10 movies
 ✅ Favorites & watchlist with add/remove
 ✅ Drag-and-drop reordering
@@ -228,8 +241,8 @@ const gridState = {
 
 **Site is live! Next, implement remaining tabs:**
 
-1. **Phase 5: IMDB Top 100 Tab**
-   - Load imdb_top_100.json (need to convert imdb_top_100.txt first using convert_imdb.html)
+1. **Phase 5: TMDB Top 100 Tab**
+   - Fetch top 100 movies from TMDB API (using discover/movie endpoint)
    - Auto-generate grid with all 100 movie posters
    - Show progress indicator
    - Cache results in localStorage
@@ -257,7 +270,8 @@ const gridState = {
 - **Jan 5, 2025:** localStorage only (no backend for MVP)
 - **Jan 5, 2025:** Keep existing BookGrid structure (proven, works well)
 - **Jan 5, 2025:** Tab-based navigation (5 grid types)
-- **Jan 5, 2025:** Convert IMDB txt to JSON for efficiency
+- **Jan 5, 2025:** (Revised) Fetch top movies directly from TMDB API instead of converting IMDB txt to JSON
+- **Jan 9, 2026:** Using TMDB API for Top 100 movies instead of static IMDB list
 - **Jan 6, 2026:** Commit config.js with API key to enable GitHub Pages (public API key approach)
 - **Jan 6, 2026:** Light blue color theme for movie/cinema aesthetic
 - **Jan 6, 2026:** Hollywood-style title with 3D text shadow and serif font
@@ -316,12 +330,30 @@ const gridState = {
   - localStorage caching reduces API calls
   - Improves performance and user experience
 
+**Jan 9, 2026 (Session 3 - Phase 5: TMDB Top 100):**
+- Completed Phase 5: TMDB Top 100 Tab
+- Clarified project uses TMDB API, not IMDB data:
+  - Updated all documentation references from IMDB to TMDB
+  - Removed obsolete imdb_top_100.txt conversion approach
+- Implemented TMDB Top 100 functionality:
+  - Created fetchTMDBTop100() to fetch 100 movies across 5 API pages
+  - Used discover/movie endpoint with popularity.desc sort
+  - Added vote_count.gte=1000 filter for quality movies
+  - Implemented renderTMDBTop100Grid() for display
+  - Added auto-load when tab is clicked
+  - Progress indicator shows loading status
+  - localStorage caching for instant subsequent loads
+- Architecture decisions:
+  - Fetch movies by popularity (most reliable metric from TMDB)
+  - Cache entire 100-movie list in localStorage
+  - Reuse existing drag-and-drop and poster display logic
+  - Auto-load prevents users from needing manual trigger
+
 ## Known Issues
-- IMDB Top 100 tab not functional yet (Phase 5 pending)
-- Top 10 by Year tab not functional yet (Phase 8 pending)
 - Favorites tab not functional yet (Phase 6 pending)
 - Watchlist tab not functional yet (Phase 7 pending)
 - Public API key means rate limits are shared across all users
+- TMDB Top 100 fetches movies by popularity, not by actual IMDB ratings (TMDB API limitation)
 
 ## Plan File Location
 Full detailed plan: `/Users/k2ey/.claude/plans/fancy-yawning-pearl.md`
