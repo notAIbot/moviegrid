@@ -65,34 +65,6 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 - **Fast & responsive** - Works on desktop, tablet, and mobile
 - **Offline-friendly** - Cached data works without internet
 
-## Setup for Development
-
-Want to run MovieGrid locally or contribute?
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/notAIbot/moviegrid.git
-   cd moviegrid
-   ```
-
-2. **Get a TMDB API key:**
-   - Sign up at [TMDB](https://www.themoviedb.org/signup)
-   - Get your API key from [Settings > API](https://www.themoviedb.org/settings/api)
-
-3. **Configure the API key:**
-   ```bash
-   cp config.example.js config.js
-   # Edit config.js and add your API key
-   ```
-
-4. **Run locally:**
-   - Open `index.html` in your browser
-   - Or use a local server:
-     ```bash
-     python -m http.server 8000
-     # Visit http://localhost:8000
-     ```
-
 ## API Rate Limits
 
 MovieGrid uses the free TMDB API tier:
