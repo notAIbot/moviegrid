@@ -1759,6 +1759,45 @@ async function captureGridScreenshot() {
 
     console.log(`All images loaded. Movie count: ${movieCount}`);
 
+    // Convert all images to data URLs to avoid CORS issues
+    console.log('Converting images to data URLs to bypass CORS restrictions...');
+    const imageConversionPromises = Array.from(images).map(async (img, index) => {
+      if (!img.src || img.src.startsWith('data:')) {
+        return; // Skip if already a data URL or no src
+      }
+
+      try {
+        // Create a temporary canvas to convert image to data URL
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.naturalWidth || img.width;
+        tempCanvas.height = img.naturalHeight || img.height;
+
+        const tempCtx = tempCanvas.getContext('2d');
+
+        // Draw image to canvas
+        tempCtx.drawImage(img, 0, 0);
+
+        // Convert to data URL
+        const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+
+        // Replace the image src with data URL
+        img.src = dataUrl;
+
+        if ((index + 1) % 20 === 0 || index === images.length - 1) {
+          console.log(`Converted ${index + 1}/${images.length} images to data URLs`);
+        }
+      } catch (error) {
+        console.warn(`Failed to convert image ${index + 1} to data URL:`, error);
+        // Continue anyway - html2canvas will try its best
+      }
+    });
+
+    await Promise.all(imageConversionPromises);
+    console.log('Image conversion complete. All images are now CORS-safe.');
+
+    // Small delay to ensure browser has processed the src changes
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     // Additional delay for rendering
     await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -1767,20 +1806,20 @@ async function captureGridScreenshot() {
     let scale, captureTimeout;
 
     if (movieCount > 150) {
-      // Very large grids: use 0.75x scale for extreme stability
-      scale = 0.75;
+      // Very large grids: use 1x scale for stability
+      scale = 1;
       captureTimeout = 90000; // 90 seconds
-      showNotification(`Large grid (${movieCount} movies). Using reduced quality for stability. This may take up to 2 minutes...`);
+      showNotification(`Preparing ${movieCount} movies for PDF export. This may take up to 2 minutes...`);
     } else if (movieCount > 100) {
-      // Large grids: use 1x scale
-      scale = isMobile ? 0.75 : 1;
-      captureTimeout = 60000; // 60 seconds
-      showNotification(`Generating PDF with ${movieCount} movies. This may take 30-90 seconds...`);
-    } else if (movieCount > 50) {
-      // Medium grids: use 1.5x scale
+      // Large grids: use 1.5x scale
       scale = isMobile ? 1 : 1.5;
+      captureTimeout = 60000; // 60 seconds
+      showNotification(`Preparing ${movieCount} movies for PDF export. This may take 30-90 seconds...`);
+    } else if (movieCount > 50) {
+      // Medium grids: use 2x scale
+      scale = isMobile ? 1.5 : 2;
       captureTimeout = 30000; // 30 seconds
-      showNotification('Large grid detected. This may take a moment...');
+      showNotification('Preparing PDF export...');
     } else {
       // Small grids: use 3x scale for best quality
       scale = isMobile ? 2 : 3;
@@ -1798,12 +1837,13 @@ async function captureGridScreenshot() {
     }
 
     // Capture using html2canvas
+    // Since we've converted all images to data URLs, we can use allowTaint: true
     const canvas = await html2canvas(captureElement, {
       backgroundColor: '#ffffff',
       scale: scale,
       logging: enableLogging, // Enable logging for large grids
-      useCORS: true,
-      allowTaint: false,
+      allowTaint: true, // Safe now since images are data URLs
+      useCORS: false, // Not needed - images are embedded
       imageTimeout: captureTimeout,
       windowWidth: captureElement.scrollWidth,
       windowHeight: captureElement.scrollHeight
