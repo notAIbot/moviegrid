@@ -1760,36 +1760,63 @@ async function captureGridScreenshot() {
     console.log(`All images loaded. Movie count: ${movieCount}`);
 
     // Convert all images to data URLs to avoid CORS issues
-    console.log('Converting images to data URLs to bypass CORS restrictions...');
+    // We need to reload images with crossOrigin attribute to avoid tainted canvas
+    console.log('Reloading images with CORS enabled to bypass restrictions...');
     const imageConversionPromises = Array.from(images).map(async (img, index) => {
       if (!img.src || img.src.startsWith('data:')) {
         return; // Skip if already a data URL or no src
       }
 
-      try {
-        // Create a temporary canvas to convert image to data URL
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = img.naturalWidth || img.width;
-        tempCanvas.height = img.naturalHeight || img.height;
+      const originalSrc = img.src;
 
-        const tempCtx = tempCanvas.getContext('2d');
+      return new Promise((resolve) => {
+        try {
+          // Create a new image with CORS enabled
+          const corsImage = new Image();
+          corsImage.crossOrigin = 'anonymous'; // Enable CORS
 
-        // Draw image to canvas
-        tempCtx.drawImage(img, 0, 0);
+          corsImage.onload = () => {
+            try {
+              // Create a temporary canvas to convert image to data URL
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = corsImage.naturalWidth || corsImage.width;
+              tempCanvas.height = corsImage.naturalHeight || corsImage.height;
 
-        // Convert to data URL
-        const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+              const tempCtx = tempCanvas.getContext('2d');
 
-        // Replace the image src with data URL
-        img.src = dataUrl;
+              // Draw image to canvas
+              tempCtx.drawImage(corsImage, 0, 0);
 
-        if ((index + 1) % 20 === 0 || index === images.length - 1) {
-          console.log(`Converted ${index + 1}/${images.length} images to data URLs`);
+              // Convert to data URL
+              const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+
+              // Replace the original image src with data URL
+              img.src = dataUrl;
+
+              if ((index + 1) % 20 === 0 || index === images.length - 1) {
+                console.log(`Converted ${index + 1}/${images.length} images to data URLs`);
+              }
+
+              resolve();
+            } catch (error) {
+              console.warn(`Failed to convert image ${index + 1} to data URL:`, error);
+              resolve(); // Continue anyway
+            }
+          };
+
+          corsImage.onerror = () => {
+            console.warn(`Failed to load image ${index + 1} with CORS:`, originalSrc);
+            resolve(); // Continue anyway
+          };
+
+          // Start loading the image with CORS
+          corsImage.src = originalSrc;
+
+        } catch (error) {
+          console.warn(`Error processing image ${index + 1}:`, error);
+          resolve(); // Continue anyway
         }
-      } catch (error) {
-        console.warn(`Failed to convert image ${index + 1} to data URL:`, error);
-        // Continue anyway - html2canvas will try its best
-      }
+      });
     });
 
     await Promise.all(imageConversionPromises);
