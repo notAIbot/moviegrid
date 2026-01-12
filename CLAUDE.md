@@ -90,6 +90,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Render favorites grid with renderFavoritesGrid()
 - [x] Bulk add favorites via text file upload
 - [x] Remove button (×) on favorites tab
+- [x] Clear All button with confirmation dialog
 - [x] Empty state message when no favorites
 - [x] Sort by order added (oldest first)
 
@@ -101,6 +102,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Render watchlist grid with renderWatchlistGrid()
 - [x] Bulk add watchlist via text file upload
 - [x] Remove button (×) on watchlist tab
+- [x] Clear All button with confirmation dialog
 - [x] Empty state message when no watchlist items
 - [x] Sort by order added (oldest first)
 
@@ -145,6 +147,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Heart icon toggles favorite status on any poster
   - Bulk add via text file upload
   - Remove button (×) on each poster
+  - Clear All button with confirmation dialog
   - Displays in order added
   - localStorage persistence
   - Export as PDF with custom title (3x resolution, A4 format)
@@ -152,6 +155,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Clipboard icon toggles watchlist status on any poster
   - Bulk add via text file upload
   - Remove button (×) on each poster
+  - Clear All button with confirmation dialog
   - Displays in order added
   - localStorage persistence
   - Export as PDF with custom title (3x resolution, A4 format)
@@ -457,7 +461,7 @@ const gridState = {
   - File upload with FileReader API for bulk imports
   - localStorage JSON serialization for movie data with metadata
 
-**Jan 12, 2026 (Session 6 - PDF Export Functionality):**
+**Jan 12, 2026 (Session 6 - PDF Export & Clear All Functionality):**
 - Completed Phase 8: PDF Export Feature (evolved from screenshot)
 - Implemented complete PDF export system:
   - Added html2canvas + jsPDF libraries via CDN
@@ -495,10 +499,19 @@ const gridState = {
   - Changed from absolute to fixed positioning (floating)
   - Made smaller per user feedback (60% size reduction)
   - Pill-shaped with gentle hover effects
+- Added Clear All functionality:
+  - Red "🗑️ Clear All" buttons for both Favorites and Watchlist tabs
+  - Confirmation dialogs showing count of items to be cleared
+  - Prevents accidental data loss with "cannot be undone" warning
+  - Updates all action buttons across page after clearing
+  - Shows notification with count of items cleared
+  - Handles empty state gracefully (shows "No items to clear" message)
+  - clearAllFavorites() and clearAllWatchlist() functions with identical patterns
+  - Event listeners properly connected to button elements
 - File organization:
-  - app.js: +280 lines (PDF generation, title prompt, filename logic)
-  - styles.css: +70 lines (floating button, cinema theme, mobile responsive)
-  - index.html: +8 lines (jsPDF CDN, button label changes, favicon)
+  - app.js: +320 lines (PDF generation, title prompt, filename logic, Clear All functions)
+  - styles.css: +100 lines (floating button, cinema theme, Clear All button styling, mobile responsive)
+  - index.html: +10 lines (jsPDF CDN, button label changes, favicon, Clear All buttons)
   - favicon.svg: new file (🎬 emoji)
 
 ## Known Issues
@@ -515,11 +528,11 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
+  - `965a357` - Add Clear All functionality for Favorites and Watchlist (Session 6)
   - `8b12c59` - Change screenshot feature to PDF export with custom title (Session 6)
   - `33f166d` - Update documentation with Session 6 progress (Screenshot feature) (Session 6)
   - `0cdf3b7` - Add screenshot functionality with high-resolution capture (Session 6)
   - `9e64c92` - Add credit to bexdesigns for original BookGrid inspiration (Session 5)
-  - `ea36bb2` - Add test movies file for bulk upload testing (Session 5)
 
 ## Future Ideas (Post-MVP)
 - ✅ ~~Share grids as images~~ (DONE - PDF export with custom title, 3x resolution, A4 format)
