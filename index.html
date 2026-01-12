@@ -4,12 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MovieGrid: Turn Your Movie List Into a Visual Grid for Instagram</title>
-  
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
   
   <!-- SortableJS for drag-and-drop -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+  <!-- html2canvas for screenshot functionality -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -29,6 +35,9 @@
 
     <!-- Custom Grid Tab -->
     <div class="tab-content" id="customTab">
+      <button class="screenshot-btn" onclick="captureGridScreenshot()">
+        📸 Download as Image
+      </button>
       <div class="input-section">
       <h2>Paste Your Movie List</h2>
       <p>Enter one movie per line with the title.</p>
@@ -54,7 +63,7 @@ The Dark Knight"></textarea>
       <div class="instructions">
         <h3>How to Share Your Grid</h3>
         <p><strong>Drag to reorder:</strong> Click and drag posters to rearrange them.</p>
-        <p><strong>Screenshot:</strong> Use your device's screenshot tool to capture the grid below.</p>
+        <p><strong>Download:</strong> Click the "📸 Download as Image" button at the top-right to save your grid as a high-quality PNG image.</p>
       </div>
 
       <div class="grid-frame" id="gridFrame">
@@ -70,6 +79,9 @@ The Dark Knight"></textarea>
         <h2>TMDB Top 100 Movies</h2>
         <p>Explore the highest-rated movies of all time according to TMDB.</p>
       </div>
+      <button class="screenshot-btn" onclick="captureGridScreenshot()">
+        📸 Download as Image
+      </button>
       <div id="imdbProgress" class="progress"></div>
       <div class="grid-frame">
         <div id="imdbGrid" class="movie-grid"></div>
@@ -82,6 +94,9 @@ The Dark Knight"></textarea>
         <h2>Top 10 Movies by Year</h2>
         <p>Select a year to see the top-rated movies released that year.</p>
       </div>
+      <button class="screenshot-btn" onclick="captureGridScreenshot()">
+        📸 Download as Image
+      </button>
       <div class="year-selector">
         <label for="yearSelect">Select Year:</label>
         <select id="yearSelect">
@@ -101,6 +116,9 @@ The Dark Knight"></textarea>
         <h2>My Favorites</h2>
         <p>Your saved favorite movies.</p>
       </div>
+      <button class="screenshot-btn" onclick="captureGridScreenshot()">
+        📸 Download as Image
+      </button>
 
       <div class="input-section">
         <h3>Add Movies to Favorites</h3>
@@ -133,6 +151,9 @@ Inception"></textarea>
         <h2>My Watchlist</h2>
         <p>Movies you want to watch.</p>
       </div>
+      <button class="screenshot-btn" onclick="captureGridScreenshot()">
+        📸 Download as Image
+      </button>
 
       <div class="input-section">
         <h3>Add Movies to Watchlist</h3>

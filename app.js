@@ -1440,6 +1440,282 @@ async function loadTMDBTop100() {
   }
 }
 
+// ===== SCREENSHOT FUNCTIONALITY =====
+
+/**
+ * Generate filename for screenshot based on active tab
+ */
+function generateScreenshotFilename(activeTab) {
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+  let tabName;
+
+  switch (activeTab) {
+    case 'imdbTop100':
+      tabName = 'tmdb-top-100';
+      break;
+    case 'topByYear':
+      const year = gridState.tabs.topByYear.year;
+      tabName = `top-by-year-${year}`;
+      break;
+    case 'favorites':
+      tabName = 'favorites';
+      break;
+    case 'watchlist':
+      tabName = 'watchlist';
+      break;
+    case 'custom':
+      // Use custom title if available, otherwise generic
+      const customTitleInput = document.getElementById('customTitle');
+      const customTitle = customTitleInput ? customTitleInput.value.trim() : '';
+      if (customTitle) {
+        // Sanitize title for filename
+        const sanitized = customTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        tabName = `custom-${sanitized}`;
+      } else {
+        tabName = 'custom-grid';
+      }
+      break;
+    default:
+      tabName = 'moviegrid';
+  }
+
+  return `moviegrid-${tabName}-${date}.png`;
+}
+
+/**
+ * Prepare elements for capture by hiding unwanted items
+ */
+function prepareCaptureElements(tabElement) {
+  const elementsToHide = [];
+
+  // Hide screenshot button
+  const screenshotBtn = tabElement.querySelector('.screenshot-btn');
+  if (screenshotBtn) {
+    screenshotBtn.style.display = 'none';
+    elementsToHide.push(screenshotBtn);
+  }
+
+  // Hide input sections
+  const inputSections = tabElement.querySelectorAll('.input-section');
+  inputSections.forEach(section => {
+    section.style.display = 'none';
+    elementsToHide.push(section);
+  });
+
+  // Hide progress indicators
+  const progressElements = tabElement.querySelectorAll('.progress');
+  progressElements.forEach(progress => {
+    progress.style.display = 'none';
+    elementsToHide.push(progress);
+  });
+
+  // Hide year selector
+  const yearSelector = tabElement.querySelector('.year-selector');
+  if (yearSelector) {
+    yearSelector.style.display = 'none';
+    elementsToHide.push(yearSelector);
+  }
+
+  // Hide empty state messages
+  const emptyStates = tabElement.querySelectorAll('.empty-state');
+  emptyStates.forEach(empty => {
+    empty.style.display = 'none';
+    elementsToHide.push(empty);
+  });
+
+  // Hide instructions for custom grid
+  const instructions = tabElement.querySelector('.instructions');
+  if (instructions) {
+    instructions.style.display = 'none';
+    elementsToHide.push(instructions);
+  }
+
+  return elementsToHide;
+}
+
+/**
+ * Restore hidden elements after capture
+ */
+function restoreCaptureElements(elements) {
+  elements.forEach(element => {
+    element.style.display = '';
+  });
+}
+
+/**
+ * Get the best element to capture based on tab
+ */
+function getCaptureElement(tabElement, activeTab) {
+  // For all tabs, we'll capture a wrapper that includes header + grid
+  const header = tabElement.querySelector('.tab-header');
+  const gridFrame = tabElement.querySelector('.grid-frame');
+
+  if (!gridFrame) {
+    return null;
+  }
+
+  // If there's a header (not custom grid), capture from the tab-content level
+  // but we've already hidden the unwanted elements
+  if (header && activeTab !== 'custom') {
+    return tabElement;
+  }
+
+  // For custom grid, capture the output section which has grid-frame
+  const outputSection = tabElement.querySelector('.output-section');
+  return outputSection || gridFrame;
+}
+
+/**
+ * Capture the current grid as a screenshot and download as PNG
+ */
+async function captureGridScreenshot() {
+  // Check if html2canvas is loaded
+  if (typeof html2canvas === 'undefined') {
+    showNotification('Screenshot feature not available. Please refresh the page.');
+    console.error('html2canvas library not loaded');
+    return;
+  }
+
+  const activeTab = gridState.activeTab;
+
+  // Get the active tab content element
+  const tabIdMap = {
+    custom: 'customTab',
+    imdbTop100: 'imdbTop100Tab',
+    topByYear: 'topByYearTab',
+    favorites: 'favoritesTab',
+    watchlist: 'watchlistTab'
+  };
+
+  const tabId = tabIdMap[activeTab];
+  const tabElement = document.getElementById(tabId);
+
+  if (!tabElement) {
+    console.error('Tab element not found');
+    showNotification('Error: Could not find tab element');
+    return;
+  }
+
+  // Check if grid has any movies
+  const gridContainer = tabElement.querySelector('.movie-grid');
+  if (!gridContainer || gridContainer.children.length === 0) {
+    showNotification('No movies to capture. Load some movies first!');
+    return;
+  }
+
+  let hiddenElements = [];
+
+  try {
+    // Add class to hide action buttons
+    tabElement.classList.add('capturing-screenshot');
+
+    // Hide unwanted elements (buttons, inputs, etc.)
+    hiddenElements = prepareCaptureElements(tabElement);
+
+    // Show notification
+    showNotification('Capturing screenshot...');
+
+    // Small delay to ensure hiding is applied
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Get the element to capture
+    const captureElement = getCaptureElement(tabElement, activeTab);
+
+    if (!captureElement) {
+      throw new Error('No content to capture');
+    }
+
+    // Wait for images to be fully loaded
+    const images = captureElement.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+          setTimeout(resolve, 5000);
+        });
+      })
+    );
+
+    // Additional delay for rendering
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Detect if mobile for scale adjustment - using higher scale for better quality
+    const isMobile = window.innerWidth <= 768;
+    const scale = isMobile ? 2 : 3; // 3x resolution on desktop, 2x on mobile
+
+    // Show extended wait notification for large grids
+    const movieCount = gridContainer.children.length;
+    let timeoutId = null;
+    if (movieCount > 50) {
+      timeoutId = setTimeout(() => {
+        showNotification('Large grid detected. This may take a moment...');
+      }, 3000);
+    }
+
+    // Capture using html2canvas
+    const canvas = await html2canvas(captureElement, {
+      backgroundColor: '#ffffff',
+      scale: scale,
+      logging: false,
+      useCORS: true,
+      allowTaint: false,
+      imageTimeout: 15000
+    });
+
+    // Clear extended wait timeout if it was set
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    // Convert canvas to blob and download
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        showNotification('Failed to create image. Please try again.');
+        return;
+      }
+
+      // Generate filename
+      const filename = generateScreenshotFilename(activeTab);
+
+      // Download the image
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      link.click();
+
+      // Cleanup
+      URL.revokeObjectURL(url);
+
+      // Show success notification
+      showNotification(`Screenshot saved as ${filename}`);
+    }, 'image/png');
+
+  } catch (error) {
+    console.error('Screenshot capture failed:', error);
+    showNotification('Screenshot failed. Please try again.');
+  } finally {
+    // Restore all hidden elements
+    restoreCaptureElements(hiddenElements);
+
+    // Remove capturing class
+    tabElement.classList.remove('capturing-screenshot');
+
+    // Re-enable button
+    const screenshotBtn = tabElement.querySelector('.screenshot-btn');
+    if (screenshotBtn) {
+      screenshotBtn.disabled = false;
+      screenshotBtn.textContent = '📸 Download as Image';
+    }
+  }
+}
+
 // ===== INITIALIZATION =====
 
 // Load favorites and watchlist from localStorage
