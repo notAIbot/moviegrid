@@ -16,6 +16,9 @@
 
   <!-- html2canvas for screenshot functionality -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -36,7 +39,7 @@
     <!-- Custom Grid Tab -->
     <div class="tab-content" id="customTab">
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
-        📸 Download as Image
+        📄 Export as PDF
       </button>
       <div class="input-section">
       <h2>Paste Your Movie List</h2>
@@ -63,7 +66,7 @@ The Dark Knight"></textarea>
       <div class="instructions">
         <h3>How to Share Your Grid</h3>
         <p><strong>Drag to reorder:</strong> Click and drag posters to rearrange them.</p>
-        <p><strong>Download:</strong> Click the "📸 Download as Image" button at the top-right to save your grid as a high-quality PNG image.</p>
+        <p><strong>Export:</strong> Click the "📄 Export as PDF" button at the top-right to save your grid as a PDF document.</p>
       </div>
 
       <div class="grid-frame" id="gridFrame">
@@ -80,7 +83,7 @@ The Dark Knight"></textarea>
         <p>Explore the highest-rated movies of all time according to TMDB.</p>
       </div>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
-        📸 Download as Image
+        📄 Export as PDF
       </button>
       <div id="imdbProgress" class="progress"></div>
       <div class="grid-frame">
@@ -95,7 +98,7 @@ The Dark Knight"></textarea>
         <p>Select a year to see the top-rated movies released that year.</p>
       </div>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
-        📸 Download as Image
+        📄 Export as PDF
       </button>
       <div class="year-selector">
         <label for="yearSelect">Select Year:</label>
@@ -117,7 +120,7 @@ The Dark Knight"></textarea>
         <p>Your saved favorite movies.</p>
       </div>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
-        📸 Download as Image
+        📄 Export as PDF
       </button>
 
       <div class="input-section">
@@ -152,7 +155,7 @@ Inception"></textarea>
         <p>Movies you want to watch.</p>
       </div>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
-        📸 Download as Image
+        📄 Export as PDF
       </button>
 
       <div class="input-section">

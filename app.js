@@ -1483,7 +1483,7 @@ function generateScreenshotFilename(activeTab) {
       tabName = 'moviegrid';
   }
 
-  return `moviegrid-${tabName}-${date}.png`;
+  return `moviegrid-${tabName}-${date}.pdf`;
 }
 
 /**
@@ -1607,6 +1607,14 @@ async function captureGridScreenshot() {
     return;
   }
 
+  // Ask user for PDF title
+  let pdfTitle = prompt('Enter a title for your PDF (or leave empty for no title):');
+  if (pdfTitle === null) {
+    // User cancelled
+    return;
+  }
+  pdfTitle = pdfTitle.trim();
+
   let hiddenElements = [];
 
   try {
@@ -1617,7 +1625,7 @@ async function captureGridScreenshot() {
     hiddenElements = prepareCaptureElements(tabElement);
 
     // Show notification
-    showNotification('Capturing screenshot...');
+    showNotification('Generating PDF...');
 
     // Small delay to ensure hiding is applied
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -1673,29 +1681,69 @@ async function captureGridScreenshot() {
       clearTimeout(timeoutId);
     }
 
-    // Convert canvas to blob and download
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        showNotification('Failed to create image. Please try again.');
-        return;
+    // Convert canvas to PDF
+    const imgData = canvas.toDataURL('image/png');
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    // Calculate PDF dimensions (in mm)
+    // A4 dimensions: 210mm x 297mm
+    // We'll use landscape or portrait based on aspect ratio
+    const aspectRatio = imgWidth / imgHeight;
+    let pdfWidth, pdfHeight;
+
+    if (aspectRatio > 1) {
+      // Landscape - wider than tall
+      pdfWidth = 297; // A4 landscape width
+      pdfHeight = pdfWidth / aspectRatio;
+    } else {
+      // Portrait - taller than wide
+      pdfHeight = 297; // A4 portrait height
+      pdfWidth = pdfHeight * aspectRatio;
+    }
+
+    // Create PDF with appropriate orientation
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: aspectRatio > 1 ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Add title if provided
+    let imageYOffset = (pdf.internal.pageSize.getHeight() - pdfHeight) / 2;
+
+    if (pdfTitle) {
+      // Add title at the top
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      const titleWidth = pdf.getTextWidth(pdfTitle);
+      const titleX = (pdf.internal.pageSize.getWidth() - titleWidth) / 2;
+      pdf.text(pdfTitle, titleX, 15); // 15mm from top
+
+      // Adjust image position to be below the title
+      imageYOffset = 25; // Start image 25mm from top to leave space for title
+
+      // Recalculate image size to fit below title
+      const availableHeight = pdf.internal.pageSize.getHeight() - imageYOffset - 10; // 10mm margin at bottom
+      if (pdfHeight > availableHeight) {
+        pdfHeight = availableHeight;
+        pdfWidth = pdfHeight * aspectRatio;
       }
+    }
 
-      // Generate filename
-      const filename = generateScreenshotFilename(activeTab);
+    // Add image to PDF (centered horizontally, positioned vertically based on title)
+    const xOffset = (pdf.internal.pageSize.getWidth() - pdfWidth) / 2;
+    pdf.addImage(imgData, 'PNG', xOffset, imageYOffset, pdfWidth, pdfHeight);
 
-      // Download the image
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = url;
-      link.click();
+    // Generate filename
+    const filename = generateScreenshotFilename(activeTab);
 
-      // Cleanup
-      URL.revokeObjectURL(url);
+    // Download PDF
+    pdf.save(filename);
 
-      // Show success notification
-      showNotification(`Screenshot saved as ${filename}`);
-    }, 'image/png');
+    // Show success notification
+    showNotification(`PDF saved as ${filename}`);
 
   } catch (error) {
     console.error('Screenshot capture failed:', error);
@@ -1711,7 +1759,7 @@ async function captureGridScreenshot() {
     const screenshotBtn = tabElement.querySelector('.screenshot-btn');
     if (screenshotBtn) {
       screenshotBtn.disabled = false;
-      screenshotBtn.textContent = '📸 Download as Image';
+      screenshotBtn.textContent = '📄 Export as PDF';
     }
   }
 }
