@@ -560,8 +560,8 @@ function renderFavoritesGrid() {
   // Hide empty state
   emptyState.style.display = 'none';
 
-  // Sort by most recently added
-  favorites.sort((a, b) => b.addedAt - a.addedAt);
+  // Sort by order added (oldest first = file order)
+  favorites.sort((a, b) => a.addedAt - b.addedAt);
 
   // Create poster elements with action buttons
   favorites.forEach(movie => {
@@ -635,8 +635,8 @@ function renderWatchlistGrid() {
   // Hide empty state
   emptyState.style.display = 'none';
 
-  // Sort by most recently added
-  watchlist.sort((a, b) => b.addedAt - a.addedAt);
+  // Sort by order added (oldest first = file order)
+  watchlist.sort((a, b) => a.addedAt - b.addedAt);
 
   // Create poster elements with action buttons
   watchlist.forEach(movie => {
