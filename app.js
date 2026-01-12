@@ -387,6 +387,70 @@ function removeFromWatchlist(movieId) {
   renderWatchlistGrid();
 }
 
+// Clear all favorites
+function clearAllFavorites() {
+  const count = Object.keys(gridState.tabs.favorites.movies).length;
+
+  if (count === 0) {
+    showNotification('No favorites to clear');
+    return;
+  }
+
+  // Confirm with user
+  const confirmed = confirm(`Are you sure you want to clear all ${count} favorite movies? This action cannot be undone.`);
+
+  if (!confirmed) {
+    return;
+  }
+
+  // Clear all favorites
+  gridState.tabs.favorites.movies = {};
+
+  // Save to localStorage
+  saveFavoritesToStorage();
+
+  // Show confirmation
+  showNotification(`Cleared ${count} movies from favorites`);
+
+  // Re-render favorites grid
+  renderFavoritesGrid();
+
+  // Update all favorite buttons across the page
+  updateAllFavoriteButtons();
+}
+
+// Clear all watchlist
+function clearAllWatchlist() {
+  const count = Object.keys(gridState.tabs.watchlist.movies).length;
+
+  if (count === 0) {
+    showNotification('No watchlist items to clear');
+    return;
+  }
+
+  // Confirm with user
+  const confirmed = confirm(`Are you sure you want to clear all ${count} watchlist movies? This action cannot be undone.`);
+
+  if (!confirmed) {
+    return;
+  }
+
+  // Clear all watchlist
+  gridState.tabs.watchlist.movies = {};
+
+  // Save to localStorage
+  saveWatchlistToStorage();
+
+  // Show confirmation
+  showNotification(`Cleared ${count} movies from watchlist`);
+
+  // Re-render watchlist grid
+  renderWatchlistGrid();
+
+  // Update all watchlist buttons across the page
+  updateAllWatchlistButtons();
+}
+
 // Move movie from watchlist to favorites
 function moveToFavorites(movieId) {
   const movie = gridState.tabs.watchlist.movies[movieId];
@@ -1278,6 +1342,18 @@ if (watchlistFileUpload) {
     };
     reader.readAsText(file);
   });
+}
+
+// Clear Favorites button event listener
+const clearFavoritesBtn = document.getElementById('clearFavoritesBtn');
+if (clearFavoritesBtn) {
+  clearFavoritesBtn.addEventListener('click', clearAllFavorites);
+}
+
+// Clear Watchlist button event listener
+const clearWatchlistBtn = document.getElementById('clearWatchlistBtn');
+if (clearWatchlistBtn) {
+  clearWatchlistBtn.addEventListener('click', clearAllWatchlist);
 }
 
 // ===== TMDB TOP 100 (PHASE 5) =====
