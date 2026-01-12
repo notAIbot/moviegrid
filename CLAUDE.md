@@ -11,7 +11,7 @@ I'm building MovieGrid - a tool to create and browse curated movie poster grids.
 - [x] Phase 5: TMDB Top 100 ✅ COMPLETED
 - [x] Phase 6: Favorites Management ✅ COMPLETED
 - [x] Phase 7: Watchlist Management ✅ COMPLETED
-- [x] Phase 8: Screenshot Functionality ✅ COMPLETED
+- [x] Phase 8: PDF Export Functionality ✅ COMPLETED
 - [ ] Phase 9-10: Polish & Documentation (NEXT)
 
 ## Project Vision
@@ -27,7 +27,8 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - TMDB API for movie posters and data
 - localStorage for favorites, watchlist, and caching
 - SortableJS for drag-and-drop reordering
-- html2canvas for high-resolution screenshot capture
+- html2canvas for high-resolution canvas capture
+- jsPDF for PDF export functionality
 - Responsive CSS Grid layout
 
 ## Current Status - WHERE WE ARE NOW (Jan 12, 2026 - Session 6)
@@ -103,16 +104,19 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Empty state message when no watchlist items
 - [x] Sort by order added (oldest first)
 
-**Phase 8: Screenshot Functionality (COMPLETED)**
-- [x] Added html2canvas library for high-quality image capture
-- [x] Screenshot button in top-right of all 5 tabs
-- [x] 3x resolution on desktop, 2x on mobile for crystal-clear zooming
-- [x] Smart filename generation (includes tab name, custom title, date)
+**Phase 8: PDF Export Functionality (COMPLETED)**
+- [x] Added html2canvas + jsPDF libraries for PDF generation
+- [x] Floating action button in bottom-right corner (all 5 tabs)
+- [x] User prompt for custom PDF title before export
+- [x] 3x resolution canvas for crystal-clear PDF quality
+- [x] Smart A4 sizing with auto landscape/portrait orientation
+- [x] Title rendered at top of PDF in bold 20pt font (optional)
+- [x] Smart filename generation (includes tab name, date, .pdf extension)
 - [x] Hides action buttons (heart/clipboard) during capture
 - [x] Captures tab header + grid for complete context
 - [x] Error handling for empty grids and loading states
 - [x] Added 🎬 emoji favicon for browser tab branding
-- [x] Download as high-quality PNG image with single click
+- [x] Subtle bronze cinema ticket theme for export button
 
 ### 🎬 Fully Functional Features:
 **All 5 Tabs are Working!**
@@ -123,34 +127,34 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Supports drag-and-drop reordering
   - Works with Hollywood and Bollywood movies
   - Heart/clipboard icons to add to Favorites/Watchlist
-  - Download as high-quality PNG image (3x resolution)
+  - Export as PDF with custom title (3x resolution, A4 format)
 - **TMDB Top 100:**
   - Auto-loads top 100 popular movies from TMDB
   - Displays high-quality movie posters
   - Cached in localStorage for fast subsequent loads
   - Supports drag-and-drop reordering
   - Heart/clipboard icons to add to Favorites/Watchlist
-  - Download as high-quality PNG image (3x resolution)
+  - Export as PDF with custom title (3x resolution, A4 format)
 - **Top 10 by Year:**
   - Year selector dropdown (1900-2026)
   - Fetches top 10 movies for selected year
   - Cached results per year
   - Heart/clipboard icons to add to Favorites/Watchlist
-  - Download as high-quality PNG image (3x resolution)
+  - Export as PDF with custom title (3x resolution, A4 format)
 - **Favorites:**
   - Heart icon toggles favorite status on any poster
   - Bulk add via text file upload
   - Remove button (×) on each poster
   - Displays in order added
   - localStorage persistence
-  - Download as high-quality PNG image (3x resolution)
+  - Export as PDF with custom title (3x resolution, A4 format)
 - **Watchlist:**
   - Clipboard icon toggles watchlist status on any poster
   - Bulk add via text file upload
   - Remove button (×) on each poster
   - Displays in order added
   - localStorage persistence
-  - Download as high-quality PNG image (3x resolution)
+  - Export as PDF with custom title (3x resolution, A4 format)
 
 ### ⏳ Remaining Phases:
 - [ ] **Phase 9: Polish & Testing** - Mobile testing, edge case handling
@@ -335,10 +339,16 @@ const gridState = {
 - **Jan 11, 2026:** Action icons (heart/clipboard) positioned at bottom-center of posters (better UX)
 - **Jan 11, 2026:** Sort Favorites/Watchlist by order added (oldest first) to maintain file upload order
 - **Jan 11, 2026:** Make icons always visible when movie is in a list (stateful UI)
-- **Jan 12, 2026:** Use html2canvas for screenshot capture (most reliable, best cross-origin support)
-- **Jan 12, 2026:** 3x resolution screenshots on desktop, 2x on mobile (balance quality vs performance)
-- **Jan 12, 2026:** Capture tab header + grid together for full context in screenshots
-- **Jan 12, 2026:** Hide action buttons during screenshot for cleaner image output
+- **Jan 12, 2026:** Use html2canvas + jsPDF for PDF export (most reliable, professional output)
+- **Jan 12, 2026:** PDF export instead of PNG screenshot (more versatile for sharing/printing)
+- **Jan 12, 2026:** User prompt for custom PDF title (personalization before export)
+- **Jan 12, 2026:** 3x resolution canvas (balance quality vs performance)
+- **Jan 12, 2026:** A4 format with auto landscape/portrait based on aspect ratio
+- **Jan 12, 2026:** Capture tab header + grid together for full context
+- **Jan 12, 2026:** Hide action buttons during capture for cleaner output
+- **Jan 12, 2026:** Floating action button in bottom-right (always accessible)
+- **Jan 12, 2026:** Subtle bronze cinema ticket theme (not bright gold - too flashy)
+- **Jan 12, 2026:** Compact button size (user preference for subtlety)
 - **Jan 12, 2026:** Use 🎬 emoji as favicon for instant movie theme recognition
 
 ## Commit Message Style
@@ -447,40 +457,54 @@ const gridState = {
   - File upload with FileReader API for bulk imports
   - localStorage JSON serialization for movie data with metadata
 
-**Jan 12, 2026 (Session 6 - Screenshot Functionality):**
-- Completed Phase 8: High-Resolution Screenshot Feature
-- Implemented complete screenshot system:
-  - Added html2canvas library via CDN (150KB, well-maintained)
-  - Screenshot buttons in top-right of all 5 tabs
-  - 3x resolution on desktop, 2x on mobile for crisp zooming
-  - Smart filename generation with tab name, custom title, and date
+**Jan 12, 2026 (Session 6 - PDF Export Functionality):**
+- Completed Phase 8: PDF Export Feature (evolved from screenshot)
+- Implemented complete PDF export system:
+  - Added html2canvas + jsPDF libraries via CDN
+  - Changed from PNG screenshot to professional PDF export
+  - User prompted for custom title before export (optional)
+  - Title rendered at top of PDF in bold 20pt font
+  - 3x resolution canvas for crystal-clear PDF quality
+  - Smart A4 sizing with auto landscape/portrait orientation
+  - Smart filename generation (moviegrid-{tab}-{date}.pdf)
   - Temporary element hiding (buttons, inputs) during capture
 - Technical challenges solved:
   - Initial approach with cloning elements failed (blank images)
   - Off-screen positioning prevented html2canvas from rendering
   - Solution: Hide unwanted elements, capture visible content directly
   - Wait for all images to load before capture to prevent blank posters
-- html2canvas learnings:
+- html2canvas + jsPDF learnings:
   - `useCORS: true` handles cross-origin TMDB images automatically
-  - `scale` parameter controls output resolution (higher = better quality, larger file)
+  - `scale` parameter controls output resolution (higher = better quality)
   - Direct DOM capture more reliable than cloning elements
   - Elements must be visible (not off-screen) for capture to work
+  - jsPDF auto-orientation based on aspect ratio (landscape/portrait)
+  - PDF dimensions calculated to fit A4 page with margins
 - UI/UX improvements:
   - Added 🎬 emoji favicon using SVG for scalability
-  - Updated Custom Grid instructions to mention download button
-  - Disabled button during capture to prevent double-clicks
-  - Progress notifications keep user informed
+  - Floating action button in bottom-right corner
+  - Subtle bronze cinema ticket theme (not bright gold)
+  - Compact size: 8px × 16px padding, 0.8rem font
+  - 85% opacity for subtlety, full opacity on hover
+  - Button only visible on active tab
+  - Updated Custom Grid instructions to mention PDF export
+  - User prompt for custom PDF title with cancel support
+- Design iterations:
+  - Started with bright golden button → too bright
+  - Reduced to muted bronze/copper tones
+  - Changed from absolute to fixed positioning (floating)
+  - Made smaller per user feedback (60% size reduction)
+  - Pill-shaped with gentle hover effects
 - File organization:
-  - app.js: +280 lines (captureGridScreenshot, prepareCaptureElements, getCaptureElement, generateScreenshotFilename)
-  - styles.css: +70 lines (screenshot button styling, mobile responsive)
-  - index.html: +8 lines (html2canvas CDN, 5 screenshot buttons, favicon)
+  - app.js: +280 lines (PDF generation, title prompt, filename logic)
+  - styles.css: +70 lines (floating button, cinema theme, mobile responsive)
+  - index.html: +8 lines (jsPDF CDN, button label changes, favicon)
   - favicon.svg: new file (🎬 emoji)
 
 ## Known Issues
 - Public API key means rate limits are shared across all users
 - TMDB Top 100 fetches movies by popularity, not by actual IMDB/TMDB top ratings (API limitation)
 - Drag-and-drop order not yet persistent across page reloads
-- Screenshot only exports to PNG (no PDF export yet)
 
 ## Plan File Location
 Full detailed plan: See git history and commit messages for implementation details
@@ -491,17 +515,17 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
+  - `8b12c59` - Change screenshot feature to PDF export with custom title (Session 6)
+  - `33f166d` - Update documentation with Session 6 progress (Screenshot feature) (Session 6)
   - `0cdf3b7` - Add screenshot functionality with high-resolution capture (Session 6)
   - `9e64c92` - Add credit to bexdesigns for original BookGrid inspiration (Session 5)
   - `ea36bb2` - Add test movies file for bulk upload testing (Session 5)
-  - `32c008d` - Update documentation with Session 5 progress (Session 5)
-  - `6ebb2bd` - Move action icons to bottom center of movie posters (Session 5)
 
 ## Future Ideas (Post-MVP)
-- ✅ ~~Share grids as images~~ (DONE - PNG screenshot with 3x resolution)
-- Export to PDF (currently PNG only)
-- Quality selector for screenshots (Low/Medium/High)
+- ✅ ~~Share grids as images~~ (DONE - PDF export with custom title, 3x resolution, A4 format)
+- Quality selector for PDF export (Low/Medium/High resolution)
 - Share directly to social media (Web Share API)
+- Export as PNG image in addition to PDF
 - More curated lists (Oscar winners, genre-specific)
 - Movie details modal (plot, cast, ratings)
 - Search within grids
