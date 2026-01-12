@@ -196,9 +196,12 @@ async function searchMovie(title) {
 // ===== UI HELPER FUNCTIONS =====
 
 // Create movie poster element
-function createMoviePoster(posterUrl, title, movieId) {
+function createMoviePoster(posterUrl, title, movieId, showActions = false) {
   const div = document.createElement('div');
   div.className = 'movie-poster';
+  div.dataset.movieId = movieId;
+  div.dataset.title = title;
+  div.dataset.posterUrl = posterUrl;
 
   // Wrap in link if we have a movie ID
   if (movieId) {
@@ -219,6 +222,36 @@ function createMoviePoster(posterUrl, title, movieId) {
     }
 
     div.appendChild(link);
+
+    // Add action buttons overlay if requested
+    if (showActions) {
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'movie-actions';
+
+      const favBtn = document.createElement('button');
+      favBtn.className = 'action-btn fav-btn';
+      favBtn.innerHTML = '❤️';
+      favBtn.title = 'Add to Favorites';
+      favBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToFavorites(movieId, title, posterUrl);
+      };
+
+      const watchlistBtn = document.createElement('button');
+      watchlistBtn.className = 'action-btn watchlist-btn';
+      watchlistBtn.innerHTML = '📋';
+      watchlistBtn.title = 'Add to Watchlist';
+      watchlistBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToWatchlist(movieId, title, posterUrl);
+      };
+
+      actionsDiv.appendChild(favBtn);
+      actionsDiv.appendChild(watchlistBtn);
+      div.appendChild(actionsDiv);
+    }
   } else {
     // No movie ID, show non-clickable poster
     if (posterUrl) {
@@ -246,6 +279,398 @@ function setLoading(isLoading, message = '') {
   } else {
     progress.classList.remove('active');
   }
+}
+
+// ===== FAVORITES & WATCHLIST MANAGEMENT =====
+
+// Add movie to favorites
+function addToFavorites(movieId, title, posterUrl, showNotif = true) {
+  if (!movieId) return;
+
+  // Add to state
+  gridState.tabs.favorites.movies[movieId] = {
+    id: movieId,
+    title,
+    posterUrl,
+    addedAt: Date.now()
+  };
+
+  // Save to localStorage
+  saveFavoritesToStorage();
+
+  // Show confirmation
+  if (showNotif) {
+    showNotification(`"${title}" added to favorites! ❤️`);
+  }
+
+  // Re-render favorites grid if we're on that tab
+  if (gridState.activeTab === 'favorites') {
+    renderFavoritesGrid();
+  }
+}
+
+// Remove movie from favorites
+function removeFromFavorites(movieId) {
+  if (!movieId) return;
+
+  const movie = gridState.tabs.favorites.movies[movieId];
+  delete gridState.tabs.favorites.movies[movieId];
+
+  // Save to localStorage
+  saveFavoritesToStorage();
+
+  // Show confirmation
+  if (movie) {
+    showNotification(`"${movie.title}" removed from favorites`);
+  }
+
+  // Re-render favorites grid
+  renderFavoritesGrid();
+}
+
+// Add movie to watchlist
+function addToWatchlist(movieId, title, posterUrl, showNotif = true) {
+  if (!movieId) return;
+
+  // Add to state
+  gridState.tabs.watchlist.movies[movieId] = {
+    id: movieId,
+    title,
+    posterUrl,
+    addedAt: Date.now()
+  };
+
+  // Save to localStorage
+  saveWatchlistToStorage();
+
+  // Show confirmation
+  if (showNotif) {
+    showNotification(`"${title}" added to watchlist! 📋`);
+  }
+
+  // Re-render watchlist grid if we're on that tab
+  if (gridState.activeTab === 'watchlist') {
+    renderWatchlistGrid();
+  }
+}
+
+// Remove movie from watchlist
+function removeFromWatchlist(movieId) {
+  if (!movieId) return;
+
+  const movie = gridState.tabs.watchlist.movies[movieId];
+  delete gridState.tabs.watchlist.movies[movieId];
+
+  // Save to localStorage
+  saveWatchlistToStorage();
+
+  // Show confirmation
+  if (movie) {
+    showNotification(`"${movie.title}" removed from watchlist`);
+  }
+
+  // Re-render watchlist grid
+  renderWatchlistGrid();
+}
+
+// Move movie from watchlist to favorites
+function moveToFavorites(movieId) {
+  const movie = gridState.tabs.watchlist.movies[movieId];
+  if (!movie) return;
+
+  // Add to favorites
+  addToFavorites(movieId, movie.title, movie.posterUrl);
+
+  // Remove from watchlist
+  removeFromWatchlist(movieId);
+
+  showNotification(`"${movie.title}" moved to favorites! ❤️`);
+}
+
+// Save favorites to localStorage
+function saveFavoritesToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(gridState.tabs.favorites.movies));
+  } catch (error) {
+    console.error('Error saving favorites to localStorage:', error);
+  }
+}
+
+// Save watchlist to localStorage
+function saveWatchlistToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(gridState.tabs.watchlist.movies));
+  } catch (error) {
+    console.error('Error saving watchlist to localStorage:', error);
+  }
+}
+
+// Load favorites from localStorage
+function loadFavoritesFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
+    if (saved) {
+      gridState.tabs.favorites.movies = JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('Error loading favorites from localStorage:', error);
+  }
+}
+
+// Load watchlist from localStorage
+function loadWatchlistFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.WATCHLIST);
+    if (saved) {
+      gridState.tabs.watchlist.movies = JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('Error loading watchlist from localStorage:', error);
+  }
+}
+
+// Show notification message
+function showNotification(message) {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  // Show notification
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 100);
+
+  // Hide and remove after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}
+
+// Render favorites grid
+function renderFavoritesGrid() {
+  const favoritesGrid = document.getElementById('favoritesGrid');
+  const emptyState = document.getElementById('favoritesEmpty');
+
+  if (!favoritesGrid) return;
+
+  // Clear grid
+  favoritesGrid.innerHTML = '';
+
+  const favorites = Object.values(gridState.tabs.favorites.movies);
+
+  if (favorites.length === 0) {
+    // Show empty state
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  // Hide empty state
+  emptyState.style.display = 'none';
+
+  // Sort by most recently added
+  favorites.sort((a, b) => b.addedAt - a.addedAt);
+
+  // Create poster elements with remove button
+  favorites.forEach(movie => {
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false);
+
+    // Add remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'action-btn remove-btn';
+    removeBtn.innerHTML = '✕';
+    removeBtn.title = 'Remove from Favorites';
+    removeBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeFromFavorites(movie.id);
+    };
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'movie-actions';
+    actionsDiv.appendChild(removeBtn);
+    posterDiv.appendChild(actionsDiv);
+
+    favoritesGrid.appendChild(posterDiv);
+  });
+
+  // Initialize drag-and-drop for favorites grid
+  new Sortable(favoritesGrid, {
+    animation: 150,
+    ghostClass: 'sortable-ghost'
+  });
+}
+
+// Render watchlist grid
+function renderWatchlistGrid() {
+  const watchlistGrid = document.getElementById('watchlistGrid');
+  const emptyState = document.getElementById('watchlistEmpty');
+
+  if (!watchlistGrid) return;
+
+  // Clear grid
+  watchlistGrid.innerHTML = '';
+
+  const watchlist = Object.values(gridState.tabs.watchlist.movies);
+
+  if (watchlist.length === 0) {
+    // Show empty state
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  // Hide empty state
+  emptyState.style.display = 'none';
+
+  // Sort by most recently added
+  watchlist.sort((a, b) => b.addedAt - a.addedAt);
+
+  // Create poster elements with action buttons
+  watchlist.forEach(movie => {
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false);
+
+    // Add action buttons
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'movie-actions';
+
+    const moveBtn = document.createElement('button');
+    moveBtn.className = 'action-btn fav-btn';
+    moveBtn.innerHTML = '❤️';
+    moveBtn.title = 'Move to Favorites';
+    moveBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      moveToFavorites(movie.id);
+    };
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'action-btn remove-btn';
+    removeBtn.innerHTML = '✕';
+    removeBtn.title = 'Remove from Watchlist';
+    removeBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeFromWatchlist(movie.id);
+    };
+
+    actionsDiv.appendChild(moveBtn);
+    actionsDiv.appendChild(removeBtn);
+    posterDiv.appendChild(actionsDiv);
+
+    watchlistGrid.appendChild(posterDiv);
+  });
+
+  // Initialize drag-and-drop for watchlist grid
+  new Sortable(watchlistGrid, {
+    animation: 150,
+    ghostClass: 'sortable-ghost'
+  });
+}
+
+// ===== BULK ADD TO FAVORITES/WATCHLIST =====
+
+// Add multiple movies to favorites from text input
+async function addMoviesToFavorites(movieTitles) {
+  const favoritesProgress = document.getElementById('favoritesProgress');
+
+  if (!movieTitles || movieTitles.length === 0) {
+    showNotification('Please enter at least one movie title');
+    return;
+  }
+
+  // Show progress
+  favoritesProgress.style.display = 'block';
+  favoritesProgress.textContent = `Adding 0 of ${movieTitles.length} movies...`;
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < movieTitles.length; i++) {
+    const title = movieTitles[i];
+
+    try {
+      // Update progress
+      favoritesProgress.textContent = `Adding ${i + 1} of ${movieTitles.length}: "${title}"...`;
+
+      // Search for movie
+      const movieData = await searchMovie(title);
+
+      // Add to favorites (suppress individual notifications)
+      addToFavorites(movieData.id, movieData.title, movieData.posterUrl, false);
+      successCount++;
+
+    } catch (error) {
+      console.warn(`Failed to add "${title}":`, error.message);
+      failCount++;
+    }
+  }
+
+  // Hide progress
+  favoritesProgress.style.display = 'none';
+
+  // Show summary
+  if (successCount > 0) {
+    showNotification(`✅ Added ${successCount} movie${successCount > 1 ? 's' : ''} to favorites!${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+  } else {
+    showNotification(`❌ Failed to add movies. Please check the titles.`);
+  }
+
+  // Clear input
+  document.getElementById('favoritesInput').value = '';
+}
+
+// Add multiple movies to watchlist from text input
+async function addMoviesToWatchlist(movieTitles) {
+  const watchlistProgress = document.getElementById('watchlistProgress');
+
+  if (!movieTitles || movieTitles.length === 0) {
+    showNotification('Please enter at least one movie title');
+    return;
+  }
+
+  // Show progress
+  watchlistProgress.style.display = 'block';
+  watchlistProgress.textContent = `Adding 0 of ${movieTitles.length} movies...`;
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < movieTitles.length; i++) {
+    const title = movieTitles[i];
+
+    try {
+      // Update progress
+      watchlistProgress.textContent = `Adding ${i + 1} of ${movieTitles.length}: "${title}"...`;
+
+      // Search for movie
+      const movieData = await searchMovie(title);
+
+      // Add to watchlist (suppress individual notifications)
+      addToWatchlist(movieData.id, movieData.title, movieData.posterUrl, false);
+      successCount++;
+
+    } catch (error) {
+      console.warn(`Failed to add "${title}":`, error.message);
+      failCount++;
+    }
+  }
+
+  // Hide progress
+  watchlistProgress.style.display = 'none';
+
+  // Show summary
+  if (successCount > 0) {
+    showNotification(`✅ Added ${successCount} movie${successCount > 1 ? 's' : ''} to watchlist!${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+  } else {
+    showNotification(`❌ Failed to add movies. Please check the titles.`);
+  }
+
+  // Clear input
+  document.getElementById('watchlistInput').value = '';
 }
 
 // ===== DOM ELEMENTS =====
@@ -417,9 +842,13 @@ function switchTab(tabName) {
     selectedTab.classList.add('active');
   }
 
-  // Auto-load TMDB Top 100 when tab is clicked
+  // Auto-load content based on tab
   if (tabName === 'imdbTop100') {
     loadTMDBTop100();
+  } else if (tabName === 'favorites') {
+    renderFavoritesGrid();
+  } else if (tabName === 'watchlist') {
+    renderWatchlistGrid();
   }
 
   console.log(`Switched to tab: ${tabName}`);
@@ -524,9 +953,9 @@ function renderYearGrid(movies) {
   // Clear existing grid
   yearGrid.innerHTML = '';
 
-  // Create poster elements
+  // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true);
     yearGrid.appendChild(posterElement);
   });
 
@@ -632,6 +1061,108 @@ if (loadYearBtn) {
   loadYearBtn.addEventListener('click', loadMoviesByYear);
 }
 
+// ===== FAVORITES & WATCHLIST INPUT HANDLERS =====
+
+// Favorites: Add button event listener
+const addFavoritesBtn = document.getElementById('addFavoritesBtn');
+if (addFavoritesBtn) {
+  addFavoritesBtn.addEventListener('click', () => {
+    const input = document.getElementById('favoritesInput');
+    const text = input.value.trim();
+
+    if (!text) {
+      showNotification('Please enter at least one movie title');
+      return;
+    }
+
+    // Parse movie titles (one per line)
+    const movieTitles = text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    addMoviesToFavorites(movieTitles);
+  });
+}
+
+// Favorites: File upload event listener
+const favoritesFileUpload = document.getElementById('favoritesFileUpload');
+if (favoritesFileUpload) {
+  favoritesFileUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const movieTitles = text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      if (movieTitles.length > 0) {
+        addMoviesToFavorites(movieTitles);
+      } else {
+        showNotification('The file appears to be empty');
+      }
+
+      // Reset file input
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Watchlist: Add button event listener
+const addWatchlistBtn = document.getElementById('addWatchlistBtn');
+if (addWatchlistBtn) {
+  addWatchlistBtn.addEventListener('click', () => {
+    const input = document.getElementById('watchlistInput');
+    const text = input.value.trim();
+
+    if (!text) {
+      showNotification('Please enter at least one movie title');
+      return;
+    }
+
+    // Parse movie titles (one per line)
+    const movieTitles = text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    addMoviesToWatchlist(movieTitles);
+  });
+}
+
+// Watchlist: File upload event listener
+const watchlistFileUpload = document.getElementById('watchlistFileUpload');
+if (watchlistFileUpload) {
+  watchlistFileUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const movieTitles = text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      if (movieTitles.length > 0) {
+        addMoviesToWatchlist(movieTitles);
+      } else {
+        showNotification('The file appears to be empty');
+      }
+
+      // Reset file input
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
+
 // ===== TMDB TOP 100 (PHASE 5) =====
 
 // Fetch top 100 movies from TMDB
@@ -690,9 +1221,9 @@ function renderTMDBTop100Grid(movies) {
   // Clear existing grid
   imdbGrid.innerHTML = '';
 
-  // Create poster elements
+  // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true);
     imdbGrid.appendChild(posterElement);
   });
 
@@ -793,7 +1324,14 @@ async function loadTMDBTop100() {
 }
 
 // ===== INITIALIZATION =====
-console.log('MovieGrid initialized - Phase 5: TMDB Top 100 & Phase 8: Top 10 by Year');
+
+// Load favorites and watchlist from localStorage
+loadFavoritesFromStorage();
+loadWatchlistFromStorage();
+
+console.log('MovieGrid initialized - Phase 6: Favorites & Watchlist');
 console.log('State management:', gridState);
 console.log('TMDB API configured:', TMDB_BASE_URL);
 console.log('Active tab:', gridState.activeTab);
+console.log('Favorites loaded:', Object.keys(gridState.tabs.favorites.movies).length);
+console.log('Watchlist loaded:', Object.keys(gridState.tabs.watchlist.movies).length);

@@ -101,8 +101,26 @@ The Dark Knight"></textarea>
         <h2>My Favorites</h2>
         <p>Your saved favorite movies.</p>
       </div>
-      <div id="favoritesEmpty" class="empty-state">
-        <p>No favorites yet! Add movies from other tabs to start building your collection.</p>
+
+      <div class="input-section">
+        <h3>Add Movies to Favorites</h3>
+        <p>Enter movie titles (one per line) or upload a text file:</p>
+        <textarea id="favoritesInput" placeholder="Example:
+The Shawshank Redemption
+The Godfather
+Inception"></textarea>
+        <div class="button-group">
+          <button id="addFavoritesBtn" class="primary-btn">Add to Favorites</button>
+          <label for="favoritesFileUpload" class="file-upload-btn">
+            📁 Upload Text File
+            <input type="file" id="favoritesFileUpload" accept=".txt" style="display: none;">
+          </label>
+        </div>
+        <div id="favoritesProgress" class="progress"></div>
+      </div>
+
+      <div id="favoritesEmpty" class="empty-state" style="display: none;">
+        <p>No favorites yet! Add movies using the form above or from other tabs.</p>
       </div>
       <div class="grid-frame">
         <div id="favoritesGrid" class="movie-grid"></div>
@@ -115,8 +133,26 @@ The Dark Knight"></textarea>
         <h2>My Watchlist</h2>
         <p>Movies you want to watch.</p>
       </div>
-      <div id="watchlistEmpty" class="empty-state">
-        <p>Your watchlist is empty! Add movies from other tabs to remember what you want to watch.</p>
+
+      <div class="input-section">
+        <h3>Add Movies to Watchlist</h3>
+        <p>Enter movie titles (one per line) or upload a text file:</p>
+        <textarea id="watchlistInput" placeholder="Example:
+Dune
+Oppenheimer
+The Batman"></textarea>
+        <div class="button-group">
+          <button id="addWatchlistBtn" class="primary-btn">Add to Watchlist</button>
+          <label for="watchlistFileUpload" class="file-upload-btn">
+            📁 Upload Text File
+            <input type="file" id="watchlistFileUpload" accept=".txt" style="display: none;">
+          </label>
+        </div>
+        <div id="watchlistProgress" class="progress"></div>
+      </div>
+
+      <div id="watchlistEmpty" class="empty-state" style="display: none;">
+        <p>Your watchlist is empty! Add movies using the form above or from other tabs.</p>
       </div>
       <div class="grid-frame">
         <div id="watchlistGrid" class="movie-grid"></div>
