@@ -768,7 +768,7 @@ async function addMoviesToFavorites(movieTitles) {
   favoritesProgress.textContent = `Adding 0 of ${movieTitles.length} movies...`;
 
   let successCount = 0;
-  let failCount = 0;
+  const failedMovies = []; // Track failed titles with reasons
 
   for (let i = 0; i < movieTitles.length; i++) {
     const title = movieTitles[i];
@@ -786,7 +786,10 @@ async function addMoviesToFavorites(movieTitles) {
 
     } catch (error) {
       console.warn(`Failed to add "${title}":`, error.message);
-      failCount++;
+      failedMovies.push({
+        title: title,
+        reason: error.message || 'Unknown error'
+      });
     }
   }
 
@@ -795,9 +798,19 @@ async function addMoviesToFavorites(movieTitles) {
 
   // Show summary
   if (successCount > 0) {
-    showNotification(`✅ Added ${successCount} movie${successCount > 1 ? 's' : ''} to favorites!${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+    showNotification(`✅ Added ${successCount} movie${successCount > 1 ? 's' : ''} to favorites!${failedMovies.length > 0 ? ` (${failedMovies.length} failed)` : ''}`);
   } else {
     showNotification(`❌ Failed to add movies. Please check the titles.`);
+  }
+
+  // If there were failures, show detailed list to user
+  if (failedMovies.length > 0) {
+    const failedList = failedMovies.map(f => `• ${f.title}`).join('\n');
+    const message = `Failed to import ${failedMovies.length} movie${failedMovies.length > 1 ? 's' : ''}:\n\n${failedList}\n\nReason: Most likely not found in TMDB database. Check spelling or try alternative titles.`;
+
+    setTimeout(() => {
+      alert(message);
+    }, 500); // Small delay after notification
   }
 
   // Clear input
@@ -818,7 +831,7 @@ async function addMoviesToWatchlist(movieTitles) {
   watchlistProgress.textContent = `Adding 0 of ${movieTitles.length} movies...`;
 
   let successCount = 0;
-  let failCount = 0;
+  const failedMovies = []; // Track failed titles with reasons
 
   for (let i = 0; i < movieTitles.length; i++) {
     const title = movieTitles[i];
@@ -836,7 +849,10 @@ async function addMoviesToWatchlist(movieTitles) {
 
     } catch (error) {
       console.warn(`Failed to add "${title}":`, error.message);
-      failCount++;
+      failedMovies.push({
+        title: title,
+        reason: error.message || 'Unknown error'
+      });
     }
   }
 
@@ -845,9 +861,19 @@ async function addMoviesToWatchlist(movieTitles) {
 
   // Show summary
   if (successCount > 0) {
-    showNotification(`✅ Added ${successCount} movie${successCount > 1 ? 's' : ''} to watchlist!${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+    showNotification(`✅ Added ${successCount} movie${successCount > 1 ? 's' : ''} to watchlist!${failedMovies.length > 0 ? ` (${failedMovies.length} failed)` : ''}`);
   } else {
     showNotification(`❌ Failed to add movies. Please check the titles.`);
+  }
+
+  // If there were failures, show detailed list to user
+  if (failedMovies.length > 0) {
+    const failedList = failedMovies.map(f => `• ${f.title}`).join('\n');
+    const message = `Failed to import ${failedMovies.length} movie${failedMovies.length > 1 ? 's' : ''}:\n\n${failedList}\n\nReason: Most likely not found in TMDB database. Check spelling or try alternative titles.`;
+
+    setTimeout(() => {
+      alert(message);
+    }, 500); // Small delay after notification
   }
 
   // Clear input
