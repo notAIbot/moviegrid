@@ -487,6 +487,15 @@ button:disabled {
   opacity: 1;
 }
 
+/* Show actions if any button is active (movie is favorited or in watchlist) */
+.movie-actions:has(.action-btn.active) {
+  opacity: 0.7;
+}
+
+.movie-poster:hover .movie-actions:has(.action-btn.active) {
+  opacity: 1;
+}
+
 .action-btn {
   width: 36px;
   height: 36px;
@@ -516,8 +525,18 @@ button:disabled {
   background: #ff4444;
 }
 
+.fav-btn.active {
+  background: #ff4444;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.5);
+}
+
 .watchlist-btn:hover {
   background: #4a9eff;
+}
+
+.watchlist-btn.active {
+  background: #4a9eff;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.5);
 }
 
 .remove-btn {

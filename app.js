@@ -228,24 +228,38 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false) {
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'movie-actions';
 
+      // Check if movie is already in favorites/watchlist
+      const isInFavorites = gridState.tabs.favorites.movies[movieId] !== undefined;
+      const isInWatchlist = gridState.tabs.watchlist.movies[movieId] !== undefined;
+
+      // Favorites button
       const favBtn = document.createElement('button');
       favBtn.className = 'action-btn fav-btn';
-      favBtn.innerHTML = '❤️';
-      favBtn.title = 'Add to Favorites';
+      favBtn.dataset.movieId = movieId;
+      favBtn.innerHTML = isInFavorites ? '❤️' : '🤍';
+      favBtn.title = isInFavorites ? 'Remove from Favorites' : 'Add to Favorites';
+      if (isInFavorites) {
+        favBtn.classList.add('active');
+      }
       favBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        addToFavorites(movieId, title, posterUrl);
+        toggleFavorite(movieId, title, posterUrl, favBtn);
       };
 
+      // Watchlist button
       const watchlistBtn = document.createElement('button');
       watchlistBtn.className = 'action-btn watchlist-btn';
-      watchlistBtn.innerHTML = '📋';
-      watchlistBtn.title = 'Add to Watchlist';
+      watchlistBtn.dataset.movieId = movieId;
+      watchlistBtn.innerHTML = isInWatchlist ? '📋' : '📄';
+      watchlistBtn.title = isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
+      if (isInWatchlist) {
+        watchlistBtn.classList.add('active');
+      }
       watchlistBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        addToWatchlist(movieId, title, posterUrl);
+        toggleWatchlist(movieId, title, posterUrl, watchlistBtn);
       };
 
       actionsDiv.appendChild(favBtn);
@@ -387,6 +401,80 @@ function moveToFavorites(movieId) {
   showNotification(`"${movie.title}" moved to favorites! ❤️`);
 }
 
+// Toggle favorite status
+function toggleFavorite(movieId, title, posterUrl, buttonElement) {
+  if (!movieId) return;
+
+  const isInFavorites = gridState.tabs.favorites.movies[movieId] !== undefined;
+
+  if (isInFavorites) {
+    // Remove from favorites
+    removeFromFavorites(movieId);
+  } else {
+    // Add to favorites
+    addToFavorites(movieId, title, posterUrl);
+  }
+
+  // Update all favorite buttons for this movie across the page
+  updateAllFavoriteButtons(movieId);
+}
+
+// Toggle watchlist status
+function toggleWatchlist(movieId, title, posterUrl, buttonElement) {
+  if (!movieId) return;
+
+  const isInWatchlist = gridState.tabs.watchlist.movies[movieId] !== undefined;
+
+  if (isInWatchlist) {
+    // Remove from watchlist
+    removeFromWatchlist(movieId);
+  } else {
+    // Add to watchlist
+    addToWatchlist(movieId, title, posterUrl);
+  }
+
+  // Update all watchlist buttons for this movie across the page
+  updateAllWatchlistButtons(movieId);
+}
+
+// Update all favorite buttons for a specific movie across all grids
+function updateAllFavoriteButtons(movieId) {
+  const isInFavorites = gridState.tabs.favorites.movies[movieId] !== undefined;
+
+  // Find all favorite buttons for this movie
+  const allFavButtons = document.querySelectorAll(`.fav-btn[data-movie-id="${movieId}"]`);
+
+  allFavButtons.forEach(btn => {
+    btn.innerHTML = isInFavorites ? '❤️' : '🤍';
+    btn.title = isInFavorites ? 'Remove from Favorites' : 'Add to Favorites';
+
+    if (isInFavorites) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
+// Update all watchlist buttons for a specific movie across all grids
+function updateAllWatchlistButtons(movieId) {
+  const isInWatchlist = gridState.tabs.watchlist.movies[movieId] !== undefined;
+
+  // Find all watchlist buttons for this movie
+  const allWatchlistButtons = document.querySelectorAll(`.watchlist-btn[data-movie-id="${movieId}"]`);
+
+  allWatchlistButtons.forEach(btn => {
+    btn.innerHTML = isInWatchlist ? '📋' : '📄';
+    btn.title = isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
+
+    if (isInWatchlist) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
 // Save favorites to localStorage
 function saveFavoritesToStorage() {
   try {
@@ -475,11 +563,33 @@ function renderFavoritesGrid() {
   // Sort by most recently added
   favorites.sort((a, b) => b.addedAt - a.addedAt);
 
-  // Create poster elements with remove button
+  // Create poster elements with action buttons
   favorites.forEach(movie => {
     const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false);
 
-    // Add remove button
+    // Add action buttons
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'movie-actions';
+
+    // Check if movie is in watchlist
+    const isInWatchlist = gridState.tabs.watchlist.movies[movie.id] !== undefined;
+
+    // Watchlist button
+    const watchlistBtn = document.createElement('button');
+    watchlistBtn.className = 'action-btn watchlist-btn';
+    watchlistBtn.dataset.movieId = movie.id;
+    watchlistBtn.innerHTML = isInWatchlist ? '📋' : '📄';
+    watchlistBtn.title = isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
+    if (isInWatchlist) {
+      watchlistBtn.classList.add('active');
+    }
+    watchlistBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleWatchlist(movie.id, movie.title, movie.posterUrl, watchlistBtn);
+    };
+
+    // Remove button
     const removeBtn = document.createElement('button');
     removeBtn.className = 'action-btn remove-btn';
     removeBtn.innerHTML = '✕';
@@ -490,8 +600,7 @@ function renderFavoritesGrid() {
       removeFromFavorites(movie.id);
     };
 
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'movie-actions';
+    actionsDiv.appendChild(watchlistBtn);
     actionsDiv.appendChild(removeBtn);
     posterDiv.appendChild(actionsDiv);
 
@@ -537,14 +646,22 @@ function renderWatchlistGrid() {
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'movie-actions';
 
-    const moveBtn = document.createElement('button');
-    moveBtn.className = 'action-btn fav-btn';
-    moveBtn.innerHTML = '❤️';
-    moveBtn.title = 'Move to Favorites';
-    moveBtn.onclick = (e) => {
+    // Check if movie is in favorites
+    const isInFavorites = gridState.tabs.favorites.movies[movie.id] !== undefined;
+
+    // Favorite button
+    const favBtn = document.createElement('button');
+    favBtn.className = 'action-btn fav-btn';
+    favBtn.dataset.movieId = movie.id;
+    favBtn.innerHTML = isInFavorites ? '❤️' : '🤍';
+    favBtn.title = isInFavorites ? 'Remove from Favorites' : 'Add to Favorites';
+    if (isInFavorites) {
+      favBtn.classList.add('active');
+    }
+    favBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      moveToFavorites(movie.id);
+      toggleFavorite(movie.id, movie.title, movie.posterUrl, favBtn);
     };
 
     const removeBtn = document.createElement('button');
@@ -557,7 +674,7 @@ function renderWatchlistGrid() {
       removeFromWatchlist(movie.id);
     };
 
-    actionsDiv.appendChild(moveBtn);
+    actionsDiv.appendChild(favBtn);
     actionsDiv.appendChild(removeBtn);
     posterDiv.appendChild(actionsDiv);
 
