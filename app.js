@@ -10,7 +10,7 @@ const RATE_LIMIT = CONFIG.TMDB_RATE_LIMIT;
 
 // ===== STATE MANAGEMENT =====
 const gridState = {
-  activeTab: 'custom', // Current active tab
+  activeTab: 'imdbTop100', // Current active tab
   tabs: {
     custom: {
       movies: [],
