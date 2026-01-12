@@ -1759,71 +1759,8 @@ async function captureGridScreenshot() {
 
     console.log(`All images loaded. Movie count: ${movieCount}`);
 
-    // Convert all images to data URLs to avoid CORS issues
-    // We need to reload images with crossOrigin attribute to avoid tainted canvas
-    console.log('Reloading images with CORS enabled to bypass restrictions...');
-    const imageConversionPromises = Array.from(images).map(async (img, index) => {
-      if (!img.src || img.src.startsWith('data:')) {
-        return; // Skip if already a data URL or no src
-      }
-
-      const originalSrc = img.src;
-
-      return new Promise((resolve) => {
-        try {
-          // Create a new image with CORS enabled
-          const corsImage = new Image();
-          corsImage.crossOrigin = 'anonymous'; // Enable CORS
-
-          corsImage.onload = () => {
-            try {
-              // Create a temporary canvas to convert image to data URL
-              const tempCanvas = document.createElement('canvas');
-              tempCanvas.width = corsImage.naturalWidth || corsImage.width;
-              tempCanvas.height = corsImage.naturalHeight || corsImage.height;
-
-              const tempCtx = tempCanvas.getContext('2d');
-
-              // Draw image to canvas
-              tempCtx.drawImage(corsImage, 0, 0);
-
-              // Convert to data URL
-              const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
-
-              // Replace the original image src with data URL
-              img.src = dataUrl;
-
-              if ((index + 1) % 20 === 0 || index === images.length - 1) {
-                console.log(`Converted ${index + 1}/${images.length} images to data URLs`);
-              }
-
-              resolve();
-            } catch (error) {
-              console.warn(`Failed to convert image ${index + 1} to data URL:`, error);
-              resolve(); // Continue anyway
-            }
-          };
-
-          corsImage.onerror = () => {
-            console.warn(`Failed to load image ${index + 1} with CORS:`, originalSrc);
-            resolve(); // Continue anyway
-          };
-
-          // Start loading the image with CORS
-          corsImage.src = originalSrc;
-
-        } catch (error) {
-          console.warn(`Error processing image ${index + 1}:`, error);
-          resolve(); // Continue anyway
-        }
-      });
-    });
-
-    await Promise.all(imageConversionPromises);
-    console.log('Image conversion complete. All images are now CORS-safe.');
-
-    // Small delay to ensure browser has processed the src changes
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // TMDB doesn't support CORS, so we'll use foreignObjectRendering instead
+    console.log('TMDB images detected - using SVG-based rendering to bypass CORS restrictions...');
 
     // Additional delay for rendering
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -1863,14 +1800,14 @@ async function captureGridScreenshot() {
       console.log('html2canvas logging enabled for debugging large grid');
     }
 
-    // Capture using html2canvas
-    // Since we've converted all images to data URLs, we can use allowTaint: true
+    // Capture using html2canvas with foreignObjectRendering
+    // This uses SVG rendering which bypasses CORS restrictions entirely
+    console.log('Starting PDF capture with SVG-based rendering...');
     const canvas = await html2canvas(captureElement, {
       backgroundColor: '#ffffff',
       scale: scale,
       logging: enableLogging, // Enable logging for large grids
-      allowTaint: true, // Safe now since images are data URLs
-      useCORS: false, // Not needed - images are embedded
+      foreignObjectRendering: true, // Use SVG foreignObject (bypasses CORS!)
       imageTimeout: captureTimeout,
       windowWidth: captureElement.scrollWidth,
       windowHeight: captureElement.scrollHeight
