@@ -1700,9 +1700,6 @@ async function captureGridScreenshot() {
     // Hide unwanted elements (buttons, inputs, etc.)
     hiddenElements = prepareCaptureElements(tabElement);
 
-    // Show notification
-    showNotification('Generating PDF...');
-
     // Small delay to ensure hiding is applied
     await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -1713,34 +1710,59 @@ async function captureGridScreenshot() {
       throw new Error('No content to capture');
     }
 
+    // Get movie count for adaptive settings
+    const movieCount = gridContainer.children.length;
+
     // Wait for images to be fully loaded
     const images = captureElement.querySelectorAll('img');
+    console.log(`Waiting for ${images.length} images to load...`);
+
+    // Adaptive timeout based on movie count
+    const imageLoadTimeout = movieCount > 100 ? 10000 : 5000;
+
     await Promise.all(
       Array.from(images).map(img => {
         if (img.complete) return Promise.resolve();
         return new Promise(resolve => {
           img.onload = resolve;
           img.onerror = resolve;
-          setTimeout(resolve, 5000);
+          setTimeout(resolve, imageLoadTimeout);
         });
       })
     );
 
+    console.log(`All images loaded. Movie count: ${movieCount}`);
+
     // Additional delay for rendering
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Detect if mobile for scale adjustment - using higher scale for better quality
+    // Adaptive scale and timeout based on grid size
     const isMobile = window.innerWidth <= 768;
-    const scale = isMobile ? 2 : 3; // 3x resolution on desktop, 2x on mobile
+    let scale, captureTimeout;
 
-    // Show extended wait notification for large grids
-    const movieCount = gridContainer.children.length;
-    let timeoutId = null;
-    if (movieCount > 50) {
-      timeoutId = setTimeout(() => {
-        showNotification('Large grid detected. This may take a moment...');
-      }, 3000);
+    if (movieCount > 150) {
+      // Very large grids: use 1x scale for stability
+      scale = 1;
+      captureTimeout = 60000; // 60 seconds
+      showNotification(`Large grid (${movieCount} movies). Using standard quality for best compatibility...`);
+    } else if (movieCount > 100) {
+      // Large grids: use 1.5x scale
+      scale = isMobile ? 1 : 1.5;
+      captureTimeout = 45000; // 45 seconds
+      showNotification(`Generating PDF with ${movieCount} movies. This may take 30-60 seconds...`);
+    } else if (movieCount > 50) {
+      // Medium grids: use 2x scale
+      scale = isMobile ? 1.5 : 2;
+      captureTimeout = 30000; // 30 seconds
+      showNotification('Large grid detected. This may take a moment...');
+    } else {
+      // Small grids: use 3x scale for best quality
+      scale = isMobile ? 2 : 3;
+      captureTimeout = 15000; // 15 seconds
+      showNotification('Generating PDF...');
     }
+
+    console.log(`Using scale: ${scale}x, timeout: ${captureTimeout}ms`);
 
     // Capture using html2canvas
     const canvas = await html2canvas(captureElement, {
@@ -1749,18 +1771,24 @@ async function captureGridScreenshot() {
       logging: false,
       useCORS: true,
       allowTaint: false,
-      imageTimeout: 15000
+      imageTimeout: captureTimeout,
+      windowWidth: captureElement.scrollWidth,
+      windowHeight: captureElement.scrollHeight
     });
 
-    // Clear extended wait timeout if it was set
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    console.log(`Canvas created: ${canvas.width}x${canvas.height}px`);
+
+    // Validate canvas was created
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      throw new Error('Canvas creation failed - empty canvas generated');
     }
 
     // Convert canvas to PDF
     const imgData = canvas.toDataURL('image/png');
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
+
+    console.log(`Converting to PDF... Canvas size: ${imgWidth}x${imgHeight}px`);
 
     // Calculate PDF dimensions (in mm)
     // A4 dimensions: 210mm x 297mm
@@ -1822,8 +1850,21 @@ async function captureGridScreenshot() {
     showNotification(`PDF saved as ${filename}`);
 
   } catch (error) {
-    console.error('Screenshot capture failed:', error);
-    showNotification('Screenshot failed. Please try again.');
+    console.error('PDF export failed:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      movieCount: gridContainer.children.length
+    });
+
+    // Show specific error message
+    if (error.message && error.message.includes('canvas')) {
+      showNotification('PDF export failed: Grid too large. Try exporting a smaller selection.');
+    } else if (error.message && error.message.includes('timeout')) {
+      showNotification('PDF export timed out. The grid might be too large. Please try again or reduce the number of movies.');
+    } else {
+      showNotification(`PDF export failed: ${error.message || 'Unknown error'}. Check console for details.`);
+    }
   } finally {
     // Restore all hidden elements
     restoreCaptureElements(hiddenElements);
