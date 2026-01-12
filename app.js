@@ -1767,18 +1767,18 @@ async function captureGridScreenshot() {
     let scale, captureTimeout;
 
     if (movieCount > 150) {
-      // Very large grids: use 1x scale for stability
-      scale = 1;
-      captureTimeout = 60000; // 60 seconds
-      showNotification(`Large grid (${movieCount} movies). Using standard quality for best compatibility...`);
+      // Very large grids: use 0.75x scale for extreme stability
+      scale = 0.75;
+      captureTimeout = 90000; // 90 seconds
+      showNotification(`Large grid (${movieCount} movies). Using reduced quality for stability. This may take up to 2 minutes...`);
     } else if (movieCount > 100) {
-      // Large grids: use 1.5x scale
-      scale = isMobile ? 1 : 1.5;
-      captureTimeout = 45000; // 45 seconds
-      showNotification(`Generating PDF with ${movieCount} movies. This may take 30-60 seconds...`);
+      // Large grids: use 1x scale
+      scale = isMobile ? 0.75 : 1;
+      captureTimeout = 60000; // 60 seconds
+      showNotification(`Generating PDF with ${movieCount} movies. This may take 30-90 seconds...`);
     } else if (movieCount > 50) {
-      // Medium grids: use 2x scale
-      scale = isMobile ? 1.5 : 2;
+      // Medium grids: use 1.5x scale
+      scale = isMobile ? 1 : 1.5;
       captureTimeout = 30000; // 30 seconds
       showNotification('Large grid detected. This may take a moment...');
     } else {
@@ -1789,12 +1789,19 @@ async function captureGridScreenshot() {
     }
 
     console.log(`Using scale: ${scale}x, timeout: ${captureTimeout}ms`);
+    console.log(`Capture element dimensions: ${captureElement.scrollWidth}x${captureElement.scrollHeight}px`);
+
+    // Enable logging for very large grids to debug issues
+    const enableLogging = movieCount > 150;
+    if (enableLogging) {
+      console.log('html2canvas logging enabled for debugging large grid');
+    }
 
     // Capture using html2canvas
     const canvas = await html2canvas(captureElement, {
       backgroundColor: '#ffffff',
       scale: scale,
-      logging: false,
+      logging: enableLogging, // Enable logging for large grids
       useCORS: true,
       allowTaint: false,
       imageTimeout: captureTimeout,
@@ -1808,6 +1815,31 @@ async function captureGridScreenshot() {
     if (!canvas || canvas.width === 0 || canvas.height === 0) {
       throw new Error('Canvas creation failed - empty canvas generated');
     }
+
+    // Check if canvas has actual content (not just blank)
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, Math.min(canvas.width, 100), Math.min(canvas.height, 100));
+    const pixels = imageData.data;
+    let hasContent = false;
+
+    // Check if there are any non-white pixels (indicating actual content)
+    for (let i = 0; i < pixels.length; i += 4) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      // If pixel is not white (255,255,255), we have content
+      if (r !== 255 || g !== 255 || b !== 255) {
+        hasContent = true;
+        break;
+      }
+    }
+
+    if (!hasContent) {
+      console.error('Canvas appears to be blank (all white pixels)');
+      throw new Error('Canvas is blank - no content was rendered. Images may not have loaded properly.');
+    }
+
+    console.log('Canvas validation passed - contains actual content');
 
     // Convert canvas to PDF
     const imgData = canvas.toDataURL('image/png');
