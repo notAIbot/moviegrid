@@ -97,6 +97,7 @@ The app includes smart rate limiting and caching to stay within these limits.
 
 ## Credits
 
+- **Original Inspiration:** Inspired by [BookGrid](https://bexdesigns.github.io/bookgrid/) by [bexdesigns](https://github.com/bexdesigns)
 - **Movie Data:** Powered by [The Movie Database (TMDB) API](https://www.themoviedb.org/)
 - **Drag & Drop:** [SortableJS](https://sortablejs.github.io/Sortable/)
 - **Created by:** [notAIbot](https://github.com/notAIbot)
