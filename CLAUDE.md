@@ -9,7 +9,9 @@ I'm building MovieGrid - a tool to create and browse curated movie poster grids.
 - [x] Phase 3: Tab Navigation ✅ COMPLETED
 - [x] GitHub Pages Deployment ✅ LIVE
 - [x] Phase 5: TMDB Top 100 ✅ COMPLETED
-- [ ] Phase 6-10: Implementation (NEXT)
+- [x] Phase 6: Favorites Management ✅ COMPLETED
+- [x] Phase 7: Watchlist Management ✅ COMPLETED
+- [ ] Phase 8-10: Polish & Documentation (NEXT)
 
 ## Project Vision
 Convert the existing BookGrid application (currently displays book covers) to MovieGrid with these features:
@@ -26,7 +28,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - SortableJS for drag-and-drop (already integrated)
 - Responsive CSS Grid layout (already working)
 
-## Current Status - WHERE WE ARE NOW (Jan 6, 2026 - Session 2)
+## Current Status - WHERE WE ARE NOW (Jan 11, 2026 - Session 5)
 
 ### 🎉 LIVE ON GITHUB PAGES!
 **URL:** https://notAIbot.github.io/moviegrid/
@@ -77,26 +79,64 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Added localStorage caching for TMDB Top 100 results
 - [x] Tab shows 100 most popular movies with high ratings
 
-### 🎬 Currently Working:
-**Custom Grid & TMDB Top 100 Tabs are Functional**
+**Phase 6: Favorites Management (COMPLETED)**
+- [x] Implemented addToFavorites() and removeFromFavorites() functions
+- [x] Added heart icon (❤️) action button on movie posters
+- [x] Toggle favorite status with single click
+- [x] Persistent storage in localStorage
+- [x] Render favorites grid with renderFavoritesGrid()
+- [x] Bulk add favorites via text file upload
+- [x] Remove button (×) on favorites tab
+- [x] Empty state message when no favorites
+- [x] Sort by order added (oldest first)
+
+**Phase 7: Watchlist Management (COMPLETED)**
+- [x] Implemented addToWatchlist() and removeFromWatchlist() functions
+- [x] Added clipboard icon (📋) action button on movie posters
+- [x] Toggle watchlist status with single click
+- [x] Persistent storage in localStorage
+- [x] Render watchlist grid with renderWatchlistGrid()
+- [x] Bulk add watchlist via text file upload
+- [x] Remove button (×) on watchlist tab
+- [x] Empty state message when no watchlist items
+- [x] Sort by order added (oldest first)
+
+### 🎬 Fully Functional Features:
+**All 5 Tabs are Working!**
 - **Custom Grid:**
   - Users can paste movie titles (one per line)
   - App fetches posters from TMDB API
   - Creates responsive poster grid
   - Supports drag-and-drop reordering
   - Works with Hollywood and Bollywood movies
+  - Heart/clipboard icons to add to Favorites/Watchlist
 - **TMDB Top 100:**
   - Auto-loads top 100 popular movies from TMDB
   - Displays high-quality movie posters
   - Cached in localStorage for fast subsequent loads
   - Supports drag-and-drop reordering
+  - Heart/clipboard icons to add to Favorites/Watchlist
+- **Top 10 by Year:**
+  - Year selector dropdown (1900-2026)
+  - Fetches top 10 movies for selected year
+  - Cached results per year
+  - Heart/clipboard icons to add to Favorites/Watchlist
+- **Favorites:**
+  - Heart icon toggles favorite status on any poster
+  - Bulk add via text file upload
+  - Remove button (×) on each poster
+  - Displays in order added
+  - localStorage persistence
+- **Watchlist:**
+  - Clipboard icon toggles watchlist status on any poster
+  - Bulk add via text file upload
+  - Remove button (×) on each poster
+  - Displays in order added
+  - localStorage persistence
 
 ### ⏳ Remaining Phases:
-- [ ] **Phase 6: Favorites Management** - Add/remove favorites, localStorage persistence
-- [ ] **Phase 7: Watchlist Management** - Add/remove watchlist items
-- [ ] **Phase 8: Top 10 by Year** - Fetch top movies for selected year from TMDB (ALREADY COMPLETED!)
-- [ ] **Phase 9: Polish & Testing** - Hover effects, empty states, testing
-- [ ] **Phase 10: Documentation** - Update README, add screenshots
+- [ ] **Phase 9: Polish & Testing** - Mobile testing, edge case handling
+- [ ] **Phase 10: Documentation** - Add screenshots, user guide
 
 ## Implementation Plan Overview
 
@@ -237,33 +277,28 @@ const gridState = {
 
 ## Next Steps for Next Session
 
-### 🚀 START HERE (Session 3):
+### 🚀 START HERE (Session 6):
 
-**Site is live! Next, implement remaining tabs:**
+**All core features complete! Next, polish and document:**
 
-1. **Phase 5: TMDB Top 100 Tab**
-   - Fetch top 100 movies from TMDB API (using discover/movie endpoint)
-   - Auto-generate grid with all 100 movie posters
-   - Show progress indicator
-   - Cache results in localStorage
-   - Add action buttons (Add to Favorites/Watchlist)
+1. **Phase 9: Polish & Testing**
+   - Test on mobile devices
+   - Test edge cases (rate limiting, offline, etc.)
+   - Add loading indicators where missing
+   - Improve error messages
+   - Add tooltips to action buttons
 
-2. **Phase 6: Favorites Management**
-   - Create addToFavorites() function
-   - Save/load from localStorage
-   - Render favorites grid
-   - Add "Remove from Favorites" button
-   - Handle empty state
+2. **Phase 10: Documentation**
+   - Add screenshots to README
+   - Create user guide section
+   - Document keyboard shortcuts if any
+   - Add FAQ section
 
-3. **Phase 7: Watchlist Management**
-   - Similar to Favorites
-   - Add "Move to Favorites" button
-
-4. **Phase 8: Top 10 by Year**
-   - Use TMDB Discover API with year filter
-   - Implement year selector functionality
-
-**Or:** Polish existing features, add documentation, screenshots
+3. **Optional Enhancements:**
+   - Persist drag-and-drop order across page reloads
+   - Add export to image/PDF functionality
+   - Add movie details modal (plot, cast, ratings)
+   - Add more curated lists (Oscar winners, genre-specific)
 
 ## Decisions Made
 - **Jan 5, 2025:** Using TMDB API (free, excellent poster quality)
@@ -276,6 +311,9 @@ const gridState = {
 - **Jan 6, 2026:** Commit config.js with API key to enable GitHub Pages (public API key approach)
 - **Jan 6, 2026:** Light blue color theme for movie/cinema aesthetic (replaced in Session 4)
 - **Jan 6, 2026:** Hollywood-style title with 3D text shadow and serif font
+- **Jan 11, 2026:** Action icons (heart/clipboard) positioned at bottom-center of posters (better UX)
+- **Jan 11, 2026:** Sort Favorites/Watchlist by order added (oldest first) to maintain file upload order
+- **Jan 11, 2026:** Make icons always visible when movie is in a list (stateful UI)
 
 ## Commit Message Style
 - Always use 🐵 (Monkey emoji) instead of 🤖 (robot emoji)
@@ -362,11 +400,32 @@ const gridState = {
   - Animated background positions for floating effect
   - Dark base colors (#1a0a0f to #2d1b3d) for theater aesthetic
 
+**Jan 11, 2026 (Session 5 - Favorites & Watchlist + UI Polish):**
+- Completed Phase 6 & 7: Favorites and Watchlist Management
+- Implemented features:
+  - Heart (❤️) and clipboard (📋) action buttons on all movie posters
+  - Toggle functionality - click to add/remove from Favorites/Watchlist
+  - Stateful buttons - icons stay visible when movie is in list
+  - Bulk add functionality - upload text files with movie titles
+  - Remove buttons (×) on Favorites and Watchlist tabs
+  - localStorage persistence for both lists
+  - Empty state messages for empty lists
+- UI improvements:
+  - Repositioned action icons from top-right to bottom-center of posters
+  - Changed layout from vertical to horizontal (side-by-side icons)
+  - Sort order changed to oldest-first (maintains file upload order)
+  - Icons appear on hover, always visible if movie is in a list
+- Technical learnings:
+  - CSS positioning with `transform: translateX(-50%)` for centering
+  - Stateful UI with `.active` class on buttons
+  - File upload with FileReader API for bulk imports
+  - localStorage JSON serialization for movie data with metadata
+
 ## Known Issues
-- Favorites tab not functional yet (Phase 6 pending)
-- Watchlist tab not functional yet (Phase 7 pending)
 - Public API key means rate limits are shared across all users
-- TMDB Top 100 fetches movies by popularity, not by actual IMDB ratings (TMDB API limitation)
+- TMDB Top 100 fetches movies by popularity, not by actual IMDB/TMDB top ratings (API limitation)
+- Drag-and-drop order not yet persistent across page reloads
+- No export to image/PDF functionality yet
 
 ## Plan File Location
 Full detailed plan: See git history and commit messages for implementation details
@@ -377,10 +436,11 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
-  - `874617d` - Add cinema-themed popcorn texture background (Session 4)
-  - `220e224` - TMDB Top 100 implementation (Session 3)
-  - `4e2f5bf` - Add config.js for GitHub Pages deployment
-  - `e866b7f` - Phase 3: Tab Navigation
+  - `6ebb2bd` - Move action icons to bottom center of movie posters (Session 5)
+  - `c866e8a` - Change Favorites & Watchlist sort order to oldest-first (Session 5)
+  - `b2034a9` - Fix toggle functionality and add stateful action buttons (Session 5)
+  - `0928bc5` - Implement Favorites & Watchlist with bulk add and file upload (Session 5)
+  - `066b4ee` - Move Custom Grid tab to extreme right, set TMDB Top 100 as default (Session 5)
 
 ## Future Ideas (Post-MVP)
 - Share grids as images

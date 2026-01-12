@@ -33,11 +33,13 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 - Explore cinema history decade by decade
 - Cached results for instant access
 
-### ❤️ Favorites & Watchlist (Coming Soon)
-- Save your favorite movies
+### ❤️ Favorites & 📋 Watchlist
+- Save your favorite movies with one click
 - Track movies you want to watch
-- Persistent storage in your browser
-- Export and share your lists
+- Bulk add movies via text file upload
+- Toggle status with action buttons on posters
+- Persistent storage in your browser (localStorage)
+- Movies display in the order they were added
 
 ## How to Use
 
@@ -46,7 +48,9 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
    - **Custom Grid:** Paste your movie titles
    - **TMDB Top Rated:** Browse highest-rated movies
    - **Top 10 by Year:** Select a year to explore
-3. **Customize:** Drag posters to reorder them
+   - **Favorites:** Save and manage your favorite movies
+   - **Watchlist:** Track movies you want to watch
+3. **Customize:** Drag posters to reorder them, click heart/clipboard icons to add to Favorites/Watchlist
 4. **Share:** Take a screenshot and post to social media
 
 ## Tech Stack
@@ -80,14 +84,15 @@ The app includes smart rate limiting and caching to stay within these limits.
 - Custom movie grid creation
 - TMDB Top Rated browser (matches official TMDB rankings)
 - Top 10 movies by year
+- Favorites management with bulk add
+- Watchlist tracking with bulk add
 - Drag-and-drop reordering
 - Responsive design
 
 🚧 **In Development:**
-- Favorites management
-- Watchlist tracking
 - Export to PDF/image
 - More curated lists
+- Movie details modal
 
 
 ## Credits
