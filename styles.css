@@ -473,11 +473,12 @@ button:disabled {
 /* Action buttons on movie posters */
 .movie-actions {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  gap: 8px;
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 10;
