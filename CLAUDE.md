@@ -508,8 +508,23 @@ const gridState = {
   - Handles empty state gracefully (shows "No items to clear" message)
   - clearAllFavorites() and clearAllWatchlist() functions with identical patterns
   - Event listeners properly connected to button elements
+- Fixed PDF export for large grids (150+ movies):
+  - Implemented adaptive scaling: 1x scale for 150+ movies (was fixed 3x)
+  - Adaptive timeouts: 60 seconds for 150+ movies (was 15 seconds)
+  - User reported 198-movie watchlist exported empty PDF
+  - Root cause: 3x scale + 15-second timeout couldn't handle large canvas
+  - Solution: Scale and timeout now adapt to movie count
+  - Canvas validation to catch empty canvas errors
+  - Detailed console logging for debugging
+  - Progress notifications show movie count and estimated time
+- Added detailed error reporting for failed imports:
+  - Track which specific movie titles failed during bulk import
+  - Show alert dialog with bulleted list of failed titles
+  - Helpful guidance: "Most likely not found in TMDB database"
+  - Applies to both Favorites and Watchlist bulk imports
+  - User can now identify typos or unavailable movies
 - File organization:
-  - app.js: +320 lines (PDF generation, title prompt, filename logic, Clear All functions)
+  - app.js: +380 lines (PDF generation, title prompt, filename logic, Clear All functions, adaptive scaling, error reporting)
   - styles.css: +100 lines (floating button, cinema theme, Clear All button styling, mobile responsive)
   - index.html: +10 lines (jsPDF CDN, button label changes, favicon, Clear All buttons)
   - favicon.svg: new file (🎬 emoji)
@@ -528,11 +543,11 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
+  - `fed696f` - Show detailed error list for failed movie imports (Session 6)
+  - `ac5143a` - Fix PDF export for large grids (150+ movies) (Session 6)
+  - `8f6ac67` - Update documentation with Clear All functionality (Session 6)
   - `965a357` - Add Clear All functionality for Favorites and Watchlist (Session 6)
   - `8b12c59` - Change screenshot feature to PDF export with custom title (Session 6)
-  - `33f166d` - Update documentation with Session 6 progress (Screenshot feature) (Session 6)
-  - `0cdf3b7` - Add screenshot functionality with high-resolution capture (Session 6)
-  - `9e64c92` - Add credit to bexdesigns for original BookGrid inspiration (Session 5)
 
 ## Future Ideas (Post-MVP)
 - ✅ ~~Share grids as images~~ (DONE - PDF export with custom title, 3x resolution, A4 format)
