@@ -213,6 +213,7 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false) {
 
     if (posterUrl) {
       const img = document.createElement('img');
+      img.crossOrigin = 'anonymous';
       img.src = posterUrl;
       img.alt = title;
       link.appendChild(img);
@@ -270,6 +271,7 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false) {
     // No movie ID, show non-clickable poster
     if (posterUrl) {
       const img = document.createElement('img');
+      img.crossOrigin = 'anonymous';
       img.src = posterUrl;
       img.alt = title;
       div.appendChild(img);
@@ -1795,7 +1797,8 @@ async function captureGridScreenshot() {
       backgroundColor: '#ffffff',
       scale: scale,
       logging: false,
-      allowTaint: true,
+      useCORS: true,
+      allowTaint: false,
       imageTimeout: captureTimeout
     });
 
