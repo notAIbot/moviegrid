@@ -613,7 +613,7 @@ button:disabled {
 /* Movie Tooltip */
 .movie-tooltip {
   position: fixed;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(128, 128, 128, 0.75);
   color: white;
   padding: 10px 14px;
   border-radius: 6px;
@@ -627,7 +627,7 @@ button:disabled {
 }
 
 .movie-tooltip.show {
-  opacity: 0.95;
+  opacity: 1;
   transform: translateY(0);
 }
 
@@ -635,36 +635,25 @@ button:disabled {
   margin: 0 0 6px 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #89c4ff;
-  border-bottom: 1px solid rgba(137, 196, 255, 0.2);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   padding-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .movie-tooltip p {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.4;
-  color: #d0d0d0;
+  color: white;
   max-height: 120px;
-  overflow-y: auto;
-}
-
-.movie-tooltip p::-webkit-scrollbar {
-  width: 4px;
-}
-
-.movie-tooltip p::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 2px;
-}
-
-.movie-tooltip p::-webkit-scrollbar-thumb {
-  background: rgba(137, 196, 255, 0.3);
-  border-radius: 2px;
-}
-
-.movie-tooltip p::-webkit-scrollbar-thumb:hover {
-  background: rgba(137, 196, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
 }
 
 /* Screenshot Button - Cinema Ticket Theme */
