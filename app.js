@@ -297,60 +297,78 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
   return div;
 }
 
+// Store tooltip timeout ID for cleanup
+let tooltipTimeout = null;
+
 // Show movie tooltip on hover
 function showMovieTooltip(event, title, overview) {
+  // Clear any existing timeout
+  if (tooltipTimeout) {
+    clearTimeout(tooltipTimeout);
+    tooltipTimeout = null;
+  }
+
   // Remove existing tooltip if any
   hideMovieTooltip();
 
-  const tooltip = document.createElement('div');
-  tooltip.id = 'movie-tooltip';
-  tooltip.className = 'movie-tooltip';
+  // Delay tooltip appearance by 600ms
+  tooltipTimeout = setTimeout(() => {
+    const tooltip = document.createElement('div');
+    tooltip.id = 'movie-tooltip';
+    tooltip.className = 'movie-tooltip';
 
-  const titleEl = document.createElement('h4');
-  titleEl.textContent = title;
+    const titleEl = document.createElement('h4');
+    titleEl.textContent = title;
 
-  const overviewEl = document.createElement('p');
-  overviewEl.textContent = overview;
+    const overviewEl = document.createElement('p');
+    overviewEl.textContent = overview;
 
-  tooltip.appendChild(titleEl);
-  tooltip.appendChild(overviewEl);
-  document.body.appendChild(tooltip);
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(overviewEl);
+    document.body.appendChild(tooltip);
 
-  // Position tooltip near the poster
-  const posterRect = event.currentTarget.getBoundingClientRect();
-  const tooltipHeight = 200; // Approximate height
-  const tooltipWidth = 300;
+    // Position tooltip near the poster
+    const posterRect = event.currentTarget.getBoundingClientRect();
+    const tooltipHeight = 200; // Approximate height
+    const tooltipWidth = 300;
 
-  // Try to position to the right of the poster
-  let left = posterRect.right + 10;
-  let top = posterRect.top;
+    // Try to position to the right of the poster
+    let left = posterRect.right + 10;
+    let top = posterRect.top;
 
-  // If tooltip would go off-screen right, position to the left
-  if (left + tooltipWidth > window.innerWidth) {
-    left = posterRect.left - tooltipWidth - 10;
-  }
+    // If tooltip would go off-screen right, position to the left
+    if (left + tooltipWidth > window.innerWidth) {
+      left = posterRect.left - tooltipWidth - 10;
+    }
 
-  // If tooltip would go off-screen left, center it
-  if (left < 0) {
-    left = Math.max(10, (window.innerWidth - tooltipWidth) / 2);
-  }
+    // If tooltip would go off-screen left, center it
+    if (left < 0) {
+      left = Math.max(10, (window.innerWidth - tooltipWidth) / 2);
+    }
 
-  // Adjust vertical position if needed
-  if (top + tooltipHeight > window.innerHeight) {
-    top = window.innerHeight - tooltipHeight - 10;
-  }
+    // Adjust vertical position if needed
+    if (top + tooltipHeight > window.innerHeight) {
+      top = window.innerHeight - tooltipHeight - 10;
+    }
 
-  tooltip.style.left = `${left}px`;
-  tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
 
-  // Fade in
-  setTimeout(() => {
-    tooltip.classList.add('show');
-  }, 10);
+    // Fade in
+    setTimeout(() => {
+      tooltip.classList.add('show');
+    }, 10);
+  }, 600);
 }
 
 // Hide movie tooltip
 function hideMovieTooltip() {
+  // Clear any pending tooltip timeout
+  if (tooltipTimeout) {
+    clearTimeout(tooltipTimeout);
+    tooltipTimeout = null;
+  }
+
   const tooltip = document.getElementById('movie-tooltip');
   if (tooltip) {
     tooltip.classList.remove('show');
