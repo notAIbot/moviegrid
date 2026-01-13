@@ -379,11 +379,13 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
   }
 
   // Add Oscar badge if movie has Oscars
-  if (hasOscars) {
+  // TEMPORARY: Show on ALL movies for testing
+  if (true || hasOscars) {
     const oscarBadge = document.createElement('div');
     oscarBadge.className = 'oscar-badge';
     oscarBadge.textContent = '🏆';
     oscarBadge.title = 'Oscar Winner';
+    console.log('Creating Oscar badge for:', title);
     div.appendChild(oscarBadge);
   }
 
