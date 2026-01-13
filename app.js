@@ -195,6 +195,27 @@ async function searchMovie(title) {
 
 // ===== UI HELPER FUNCTIONS =====
 
+// Convert image URL to data URL using fetch and canvas
+async function convertImageToDataUrl(imageUrl) {
+  try {
+    // Use a CORS proxy to fetch the image
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageUrl)}`;
+
+    const response = await fetch(proxyUrl);
+    const blob = await response.blob();
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn('Failed to convert image to data URL:', error);
+    return imageUrl; // Fallback to original URL
+  }
+}
+
 // Create movie poster element
 function createMoviePoster(posterUrl, title, movieId, showActions = false) {
   const div = document.createElement('div');
@@ -215,6 +236,16 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false) {
       const img = document.createElement('img');
       img.src = posterUrl;
       img.alt = title;
+
+      // Convert to data URL in background for PDF export compatibility
+      if (posterUrl.includes('image.tmdb.org')) {
+        convertImageToDataUrl(posterUrl).then(dataUrl => {
+          img.src = dataUrl;
+        }).catch(err => {
+          console.warn('Failed to convert poster to data URL:', err);
+        });
+      }
+
       link.appendChild(img);
     } else {
       link.classList.add('placeholder');
@@ -272,6 +303,16 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false) {
       const img = document.createElement('img');
       img.src = posterUrl;
       img.alt = title;
+
+      // Convert to data URL in background for PDF export compatibility
+      if (posterUrl.includes('image.tmdb.org')) {
+        convertImageToDataUrl(posterUrl).then(dataUrl => {
+          img.src = dataUrl;
+        }).catch(err => {
+          console.warn('Failed to convert poster to data URL:', err);
+        });
+      }
+
       div.appendChild(img);
     } else {
       div.classList.add('placeholder');
