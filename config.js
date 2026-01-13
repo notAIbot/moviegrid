@@ -7,5 +7,7 @@ const CONFIG = {
   TMDB_RATE_LIMIT: {
     requestsPerPeriod: 40,
     periodInSeconds: 10
-  }
+  },
+  OMDB_API_KEY: 'trilogy', // Free test key - get your own at http://www.omdbapi.com/apikey.aspx
+  OMDB_BASE_URL: 'https://www.omdbapi.com'
 };

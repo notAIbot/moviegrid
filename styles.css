@@ -643,6 +643,14 @@ button:disabled {
   text-overflow: ellipsis;
 }
 
+.movie-tooltip .oscar-info {
+  margin: 6px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #FFD700;
+  text-align: center;
+}
+
 .movie-tooltip p {
   margin: 0;
   font-size: 0.8rem;

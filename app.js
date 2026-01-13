@@ -7,6 +7,8 @@ const TMDB_API_KEY = CONFIG.TMDB_API_KEY;
 const TMDB_BASE_URL = CONFIG.TMDB_BASE_URL;
 const TMDB_IMAGE_BASE_URL = CONFIG.TMDB_IMAGE_BASE_URL;
 const RATE_LIMIT = CONFIG.TMDB_RATE_LIMIT;
+const OMDB_API_KEY = CONFIG.OMDB_API_KEY;
+const OMDB_BASE_URL = CONFIG.OMDB_BASE_URL;
 
 // ===== STATE MANAGEMENT =====
 const gridState = {
@@ -45,7 +47,8 @@ const STORAGE_KEYS = {
   LAST_TAB: 'moviegrid_last_tab',
   LAST_YEAR: 'moviegrid_last_year',
   CUSTOM_TITLE: 'moviegrid_custom_title',
-  CUSTOM_INPUT: 'moviegrid_custom_input'
+  CUSTOM_INPUT: 'moviegrid_custom_input',
+  OSCAR_CACHE: 'moviegrid_oscar_cache'
 };
 
 // ===== ERROR HANDLING FRAMEWORK =====
@@ -136,6 +139,69 @@ function saveToCache(query, posterUrl) {
   } catch (e) {
     console.warn('Cache save failed:', e);
     // Don't throw - caching is optional
+  }
+}
+
+// ===== OMDB API FUNCTIONS =====
+
+// Get Oscar cache
+function getOscarCache() {
+  try {
+    const cache = localStorage.getItem(STORAGE_KEYS.OSCAR_CACHE);
+    return cache ? JSON.parse(cache) : {};
+  } catch (e) {
+    console.warn('Failed to read Oscar cache:', e);
+    return {};
+  }
+}
+
+// Save to Oscar cache
+function saveToOscarCache(imdbId, oscarData) {
+  try {
+    const cache = getOscarCache();
+    cache[imdbId] = oscarData;
+    localStorage.setItem(STORAGE_KEYS.OSCAR_CACHE, JSON.stringify(cache));
+  } catch (e) {
+    console.warn('Oscar cache save failed:', e);
+  }
+}
+
+// Fetch Oscar data from OMDb using IMDB ID
+async function fetchOscarData(imdbId) {
+  if (!imdbId) return null;
+
+  // Check cache first
+  const cache = getOscarCache();
+  if (cache[imdbId]) {
+    return cache[imdbId];
+  }
+
+  try {
+    const url = `${OMDB_BASE_URL}/?i=${imdbId}&apikey=${OMDB_API_KEY}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.warn('OMDb API request failed:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.Response === 'True' && data.Awards) {
+      // Extract Oscar wins from Awards string
+      // Example: "Won 11 Oscars. 126 wins & 84 nominations total"
+      const oscarMatch = data.Awards.match(/Won (\d+) Oscar/i);
+      const oscarData = oscarMatch ? `🏆 Won ${oscarMatch[1]} Oscar${oscarMatch[1] !== '1' ? 's' : ''}` : null;
+
+      // Cache the result (even if null)
+      saveToOscarCache(imdbId, oscarData);
+      return oscarData;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('Failed to fetch Oscar data:', error);
+    return null;
   }
 }
 
@@ -286,7 +352,7 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
   // Add hover tooltip for movie details
   if (overview && movieId) {
     div.addEventListener('mouseenter', (e) => {
-      showMovieTooltip(e, title, overview);
+      showMovieTooltip(e, title, overview, movieId);
     });
 
     div.addEventListener('mouseleave', () => {
@@ -301,7 +367,7 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
 let tooltipTimeout = null;
 
 // Show movie tooltip on hover
-function showMovieTooltip(event, title, overview) {
+async function showMovieTooltip(event, title, overview, movieId = null) {
   // Clear any existing timeout
   if (tooltipTimeout) {
     clearTimeout(tooltipTimeout);
@@ -315,7 +381,7 @@ function showMovieTooltip(event, title, overview) {
   const posterRect = event.currentTarget.getBoundingClientRect();
 
   // Delay tooltip appearance by 600ms
-  tooltipTimeout = setTimeout(() => {
+  tooltipTimeout = setTimeout(async () => {
     const tooltip = document.createElement('div');
     tooltip.id = 'movie-tooltip';
     tooltip.className = 'movie-tooltip';
@@ -323,10 +389,38 @@ function showMovieTooltip(event, title, overview) {
     const titleEl = document.createElement('h4');
     titleEl.textContent = title;
 
+    // Fetch Oscar data if we have a movie ID
+    let oscarInfo = null;
+    if (movieId) {
+      try {
+        // First get IMDB ID from TMDB
+        const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movieId}/external_ids?api_key=${TMDB_API_KEY}`;
+        const externalIdsResponse = await fetch(externalIdsUrl);
+        if (externalIdsResponse.ok) {
+          const externalIds = await externalIdsResponse.json();
+          if (externalIds.imdb_id) {
+            oscarInfo = await fetchOscarData(externalIds.imdb_id);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch Oscar data for tooltip:', error);
+      }
+    }
+
+    // Add Oscar info if available
+    if (oscarInfo) {
+      const oscarEl = document.createElement('div');
+      oscarEl.className = 'oscar-info';
+      oscarEl.textContent = oscarInfo;
+      tooltip.appendChild(titleEl);
+      tooltip.appendChild(oscarEl);
+    } else {
+      tooltip.appendChild(titleEl);
+    }
+
     const overviewEl = document.createElement('p');
     overviewEl.textContent = overview;
 
-    tooltip.appendChild(titleEl);
     tooltip.appendChild(overviewEl);
     document.body.appendChild(tooltip);
 
