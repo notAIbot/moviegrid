@@ -379,13 +379,11 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
   }
 
   // Add Oscar badge if movie has Oscars
-  // TEMPORARY: Show on ALL movies for testing
-  if (true || hasOscars) {
+  if (hasOscars) {
     const oscarBadge = document.createElement('div');
     oscarBadge.className = 'oscar-badge';
     oscarBadge.textContent = '🏆';
     oscarBadge.title = 'Oscar Winner';
-    console.log('Creating Oscar badge for:', title);
     div.appendChild(oscarBadge);
   }
 
@@ -1369,15 +1367,41 @@ async function fetchTopMoviesByYear(year) {
       // Get top 10 movies
       const top10 = data.results.slice(0, 10);
 
-      return top10.map(movie => ({
-        id: movie.id,
-        title: movie.title,
-        posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
-        releaseDate: movie.release_date,
-        rating: movie.vote_average,
-        voteCount: movie.vote_count,
-        overview: movie.overview || 'No overview available.'
-      }));
+      // Fetch Oscar data for each movie
+      const moviesWithOscars = [];
+      for (const movie of top10) {
+        let hasOscars = false;
+
+        try {
+          // Get IMDB ID
+          await rateLimiter.throttle();
+          const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
+          const externalIdsResponse = await fetch(externalIdsUrl);
+
+          if (externalIdsResponse.ok) {
+            const externalIds = await externalIdsResponse.json();
+            if (externalIds.imdb_id) {
+              const oscarData = await fetchOscarData(externalIds.imdb_id);
+              hasOscars = oscarData !== null;
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch Oscar data for ${movie.title}:`, error);
+        }
+
+        moviesWithOscars.push({
+          id: movie.id,
+          title: movie.title,
+          posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
+          releaseDate: movie.release_date,
+          rating: movie.vote_average,
+          voteCount: movie.vote_count,
+          overview: movie.overview || 'No overview available.',
+          hasOscars: hasOscars
+        });
+      }
+
+      return moviesWithOscars;
     }
 
     return [];
@@ -1400,7 +1424,7 @@ function renderYearGrid(movies) {
 
   // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '');
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '', movie.hasOscars || false);
     yearGrid.appendChild(posterElement);
   });
 
@@ -1646,18 +1670,41 @@ async function fetchTMDBTop100() {
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
-        const pageMovies = data.results.map(movie => ({
-          id: movie.id,
-          title: movie.title,
-          posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
-          releaseDate: movie.release_date,
-          rating: movie.vote_average,
-          voteCount: movie.vote_count,
-          popularity: movie.popularity,
-          overview: movie.overview || 'No overview available.'
-        }));
+        // Fetch Oscar data for each movie
+        for (const movie of data.results) {
+          let hasOscars = false;
 
-        movies.push(...pageMovies);
+          try {
+            // Get IMDB ID
+            await rateLimiter.throttle();
+            const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
+            const externalIdsResponse = await fetch(externalIdsUrl);
+
+            if (externalIdsResponse.ok) {
+              const externalIds = await externalIdsResponse.json();
+              if (externalIds.imdb_id) {
+                const oscarData = await fetchOscarData(externalIds.imdb_id);
+                hasOscars = oscarData !== null;
+              }
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch Oscar data for ${movie.title}:`, error);
+          }
+
+          const movieData = {
+            id: movie.id,
+            title: movie.title,
+            posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
+            releaseDate: movie.release_date,
+            rating: movie.vote_average,
+            voteCount: movie.vote_count,
+            popularity: movie.popularity,
+            overview: movie.overview || 'No overview available.',
+            hasOscars: hasOscars
+          };
+
+          movies.push(movieData);
+        }
       }
     }
 
@@ -1681,7 +1728,7 @@ function renderTMDBTop100Grid(movies) {
 
   // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '');
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '', movie.hasOscars || false);
     imdbGrid.appendChild(posterElement);
   });
 
@@ -1707,8 +1754,8 @@ async function loadTMDBTop100() {
     return;
   }
 
-  // Check cache first (v2 = using top_rated endpoint)
-  const cacheKey = 'tmdb_top_rated_v2';
+  // Check cache first (v3 = using top_rated endpoint with Oscar data)
+  const cacheKey = 'tmdb_top_rated_v3';
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -1726,7 +1773,7 @@ async function loadTMDBTop100() {
 
   // Show progress
   if (imdbProgress) {
-    imdbProgress.textContent = 'Loading TMDB Top Rated movies... (This may take a moment)';
+    imdbProgress.textContent = 'Loading TMDB Top Rated movies with Oscar data... (This may take 1-2 minutes)';
     imdbProgress.classList.add('active');
   }
 
