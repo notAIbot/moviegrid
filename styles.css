@@ -551,8 +551,8 @@ button:disabled {
 }
 
 .action-btn {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
