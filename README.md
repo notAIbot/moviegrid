@@ -46,6 +46,12 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 - Clean exports with action buttons hidden
 - Share instantly on social media
 
+### 🏆 Oscar Information
+- Oscar-winning movies display a tiny trophy badge on the poster
+- Hover tooltips show Oscar wins count (e.g., "🏆 Won 11 Oscars")
+- Award data powered by OMDb API
+- Cached for instant subsequent loads
+
 ## How to Use
 
 1. **Visit the app:** [https://notAIbot.github.io/moviegrid/](https://notAIbot.github.io/moviegrid/)
@@ -62,7 +68,9 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 ## Tech Stack
 
 - **Frontend:** Pure HTML, CSS, and JavaScript (no frameworks)
-- **API:** [TMDB API](https://www.themoviedb.org/documentation/api) for movie data and posters
+- **APIs:**
+  - [TMDB API](https://www.themoviedb.org/documentation/api) for movie data and posters
+  - [OMDb API](http://www.omdbapi.com/) for Oscar/Academy Awards information
 - **Storage:** localStorage for caching and persistence
 - **Drag & Drop:** [SortableJS](https://sortablejs.github.io/Sortable/) for smooth reordering
 - **Image Export:** [html2canvas](https://html2canvas.hertzen.com/) for high-quality PNG exports
@@ -79,9 +87,12 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 
 ## API Rate Limits
 
-MovieGrid uses the free TMDB API tier:
+**TMDB API** (free tier):
 - **1,000 requests per day**
 - **40 requests per 10 seconds**
+
+**OMDb API** (free tier):
+- **1,000 requests per day**
 
 The app includes smart rate limiting and caching to stay within these limits.
 
@@ -94,6 +105,7 @@ The app includes smart rate limiting and caching to stay within these limits.
 - Favorites management with bulk add and custom titles
 - Watchlist tracking with bulk add and custom titles
 - PNG image export with adaptive quality
+- Oscar badges and hover tooltips showing Academy Award wins
 - Drag-and-drop reordering
 - Responsive design (mobile, tablet, desktop)
 
@@ -107,6 +119,7 @@ The app includes smart rate limiting and caching to stay within these limits.
 
 - **Original Inspiration:** Inspired by [BookGrid](https://bexdesigns.github.io/bookgrid/) by [bexdesigns](https://github.com/bexdesigns)
 - **Movie Data:** Powered by [The Movie Database (TMDB) API](https://www.themoviedb.org/)
+- **Oscar Data:** Powered by [The Open Movie Database (OMDb) API](http://www.omdbapi.com/)
 - **Drag & Drop:** [SortableJS](https://sortablejs.github.io/Sortable/)
 - **Image Export:** [html2canvas](https://html2canvas.hertzen.com/)
 - **Created by:** [notAIbot](https://github.com/notAIbot)
