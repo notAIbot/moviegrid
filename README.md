@@ -37,6 +37,14 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 - Toggle status with action buttons on posters
 - Persistent storage in your browser (localStorage)
 - Movies display in the order they were added
+- Add custom titles when exporting (e.g., "My All-Time Favorites")
+
+### 📸 Export to Image
+- Download any grid as high-quality PNG image
+- Optional custom titles for Favorites and Watchlist exports
+- Adaptive quality based on grid size (up to 3x resolution)
+- Clean exports with action buttons hidden
+- Share instantly on social media
 
 ## How to Use
 
@@ -48,7 +56,8 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
    - **Favorites:** Save and manage your favorite movies
    - **Watchlist:** Track movies you want to watch
 3. **Customize:** Drag posters to reorder them, click heart/clipboard icons to add to Favorites/Watchlist
-4. **Share:** Take a screenshot and post to social media
+4. **Export:** Click "📸 Download as Image" to save your grid as PNG (add custom title when prompted)
+5. **Share:** Post your exported image to social media
 
 ## Tech Stack
 
@@ -56,6 +65,7 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 - **API:** [TMDB API](https://www.themoviedb.org/documentation/api) for movie data and posters
 - **Storage:** localStorage for caching and persistence
 - **Drag & Drop:** [SortableJS](https://sortablejs.github.io/Sortable/) for smooth reordering
+- **Image Export:** [html2canvas](https://html2canvas.hertzen.com/) for high-quality PNG exports
 - **Hosting:** GitHub Pages (free, fast, reliable)
 
 ## Why MovieGrid?
@@ -78,18 +88,19 @@ The app includes smart rate limiting and caching to stay within these limits.
 ## Project Status
 
 ✅ **Live & Functional:**
-- Custom movie grid creation
+- Custom movie grid creation with custom titles
 - TMDB Top Rated browser (matches official TMDB rankings)
 - Top 10 movies by year
-- Favorites management with bulk add
-- Watchlist tracking with bulk add
+- Favorites management with bulk add and custom titles
+- Watchlist tracking with bulk add and custom titles
+- PNG image export with adaptive quality
 - Drag-and-drop reordering
-- Responsive design
+- Responsive design (mobile, tablet, desktop)
 
-🚧 **In Development:**
-- Export to PDF/image
-- More curated lists
-- Movie details modal
+🚧 **Future Ideas:**
+- More curated lists (Oscar winners, genre-specific)
+- Movie details modal (plot, cast, ratings)
+- Share directly to social media
 
 
 ## Credits
@@ -97,6 +108,7 @@ The app includes smart rate limiting and caching to stay within these limits.
 - **Original Inspiration:** Inspired by [BookGrid](https://bexdesigns.github.io/bookgrid/) by [bexdesigns](https://github.com/bexdesigns)
 - **Movie Data:** Powered by [The Movie Database (TMDB) API](https://www.themoviedb.org/)
 - **Drag & Drop:** [SortableJS](https://sortablejs.github.io/Sortable/)
+- **Image Export:** [html2canvas](https://html2canvas.hertzen.com/)
 - **Created by:** [notAIbot](https://github.com/notAIbot)
 - **Built with:** Human creativity + AI assistance (Claude Sonnet)
 

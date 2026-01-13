@@ -11,7 +11,7 @@ I'm building MovieGrid - a tool to create and browse curated movie poster grids.
 - [x] Phase 5: TMDB Top 100 ✅ COMPLETED
 - [x] Phase 6: Favorites Management ✅ COMPLETED
 - [x] Phase 7: Watchlist Management ✅ COMPLETED
-- [x] Phase 8: PDF Export Functionality ✅ COMPLETED
+- [x] Phase 8: PNG Image Export with Custom Titles ✅ COMPLETED
 - [ ] Phase 9-10: Polish & Documentation (NEXT)
 
 ## Project Vision
@@ -27,11 +27,10 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - TMDB API for movie posters and data
 - localStorage for favorites, watchlist, and caching
 - SortableJS for drag-and-drop reordering
-- html2canvas for high-resolution canvas capture
-- jsPDF for PDF export functionality
+- html2canvas for high-resolution PNG image export
 - Responsive CSS Grid layout
 
-## Current Status - WHERE WE ARE NOW (Jan 12, 2026 - Session 6)
+## Current Status - WHERE WE ARE NOW (Jan 12, 2026 - Session 7)
 
 ### 🎉 LIVE ON GITHUB PAGES!
 **URL:** https://notAIbot.github.io/moviegrid/
@@ -106,19 +105,19 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - [x] Empty state message when no watchlist items
 - [x] Sort by order added (oldest first)
 
-**Phase 8: PDF Export Functionality (COMPLETED)**
-- [x] Added html2canvas + jsPDF libraries for PDF generation
-- [x] Floating action button in bottom-right corner (all 5 tabs)
-- [x] User prompt for custom PDF title before export
-- [x] 3x resolution canvas for crystal-clear PDF quality
-- [x] Smart A4 sizing with auto landscape/portrait orientation
-- [x] Title rendered at top of PDF in bold 20pt font (optional)
-- [x] Smart filename generation (includes tab name, date, .pdf extension)
-- [x] Hides action buttons (heart/clipboard) during capture
-- [x] Captures tab header + grid for complete context
-- [x] Error handling for empty grids and loading states
-- [x] Added 🎬 emoji favicon for browser tab branding
-- [x] Subtle bronze cinema ticket theme for export button
+**Phase 8: PNG Image Export with Custom Titles (COMPLETED)**
+- [x] Added html2canvas library for high-quality PNG export
+- [x] Floating "📸 Download as Image" button (all 5 tabs)
+- [x] Optional custom title prompt for Favorites and Watchlist exports
+- [x] Adaptive resolution scaling (1x-3x) based on grid size
+- [x] Added img.crossOrigin='anonymous' for TMDB CORS compatibility
+- [x] Custom titles displayed in exported image
+- [x] Smart filename generation (includes tab name, custom title, date, .png extension)
+- [x] Hides action buttons (heart/clipboard) and input sections during capture
+- [x] Captures grid-frame with optional title
+- [x] Error handling for empty grids, large grids, and timeouts
+- [x] Adaptive timeout (15s-90s) based on movie count
+- [x] Temporary title injection - doesn't save to localStorage
 
 ### 🎬 Fully Functional Features:
 **All 5 Tabs are Working!**
@@ -129,20 +128,20 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Supports drag-and-drop reordering
   - Works with Hollywood and Bollywood movies
   - Heart/clipboard icons to add to Favorites/Watchlist
-  - Export as PDF with custom title (3x resolution, A4 format)
+  - Export as PNG image (adaptive 1x-3x resolution)
 - **TMDB Top 100:**
   - Auto-loads top 100 popular movies from TMDB
   - Displays high-quality movie posters
   - Cached in localStorage for fast subsequent loads
   - Supports drag-and-drop reordering
   - Heart/clipboard icons to add to Favorites/Watchlist
-  - Export as PDF with custom title (3x resolution, A4 format)
+  - Export as PNG image (adaptive 1x-3x resolution)
 - **Top 10 by Year:**
   - Year selector dropdown (1900-2026)
   - Fetches top 10 movies for selected year
   - Cached results per year
   - Heart/clipboard icons to add to Favorites/Watchlist
-  - Export as PDF with custom title (3x resolution, A4 format)
+  - Export as PNG image (adaptive 1x-3x resolution)
 - **Favorites:**
   - Heart icon toggles favorite status on any poster
   - Bulk add via text file upload
@@ -150,7 +149,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Clear All button with confirmation dialog
   - Displays in order added
   - localStorage persistence
-  - Export as PDF with custom title (3x resolution, A4 format)
+  - Export as PNG with optional custom title prompt
 - **Watchlist:**
   - Clipboard icon toggles watchlist status on any poster
   - Bulk add via text file upload
@@ -158,7 +157,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Clear All button with confirmation dialog
   - Displays in order added
   - localStorage persistence
-  - Export as PDF with custom title (3x resolution, A4 format)
+  - Export as PNG with optional custom title prompt
 
 ### ⏳ Remaining Phases:
 - [ ] **Phase 9: Polish & Testing** - Mobile testing, edge case handling
@@ -529,6 +528,38 @@ const gridState = {
   - index.html: +10 lines (jsPDF CDN, button label changes, favicon, Clear All buttons)
   - favicon.svg: new file (🎬 emoji)
 
+**Jan 12, 2026 (Session 7 - PNG Export Fix & Custom Title Prompts):**
+- Abandoned PDF export approach due to TMDB CORS restrictions
+- Switched to PNG image export for compatibility
+- Fixed image export failures:
+  - Root cause: TMDB images don't have proper CORS headers
+  - Multiple failed approaches tried (foreignObjectRendering, CORS proxies)
+  - Solution: Add `img.crossOrigin = 'anonymous'` when creating poster images
+  - This allows html2canvas to read images with `useCORS: true, allowTaint: false`
+- Implemented optional custom title prompts:
+  - User prompted for custom title when exporting Favorites or Watchlist
+  - Title displayed in exported image (injected temporarily)
+  - Title included in filename (sanitized for file system)
+  - Temporary only - doesn't save to localStorage
+  - User can skip by leaving blank or clicking Cancel
+- Technical learnings:
+  - Canvas "tainting" prevents toBlob() when allowTaint: true
+  - crossOrigin attribute must be set BEFORE image loads
+  - TMDB API serves images without Access-Control-Allow-Origin headers
+  - Solution requires setting crossOrigin on img elements at creation time
+  - foreignObjectRendering bypasses pixel reading but produces empty output
+- Code changes:
+  - Removed jsPDF library completely
+  - Changed button text from "Export as PDF" to "📸 Download as Image"
+  - Fixed filename extension from .pdf to .png
+  - Added temporary title element injection before capture
+  - Cleanup of temporary elements in finally block
+  - Filename now includes custom title: `moviegrid-favorites-my-favorites-2026-01-12.png`
+- Testing workflow established:
+  - Test locally first (open index.html or use local server)
+  - Commit and push only after confirming fixes work
+  - User preference for local testing before deployment
+
 ## Known Issues
 - Public API key means rate limits are shared across all users
 - TMDB Top 100 fetches movies by popularity, not by actual IMDB/TMDB top ratings (API limitation)
@@ -543,17 +574,16 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
+  - `752f6b5` - Add optional custom title prompt on image export (Session 7)
+  - `8c08e64` - Revert "Add custom title feature for Favorites and Watchlist tabs" (Session 7)
+  - `18183f7` - Fix image export by setting crossOrigin on img elements (Session 7)
+  - `362e694` - Switch from PDF to PNG image export (Session 7)
   - `fed696f` - Show detailed error list for failed movie imports (Session 6)
-  - `ac5143a` - Fix PDF export for large grids (150+ movies) (Session 6)
-  - `8f6ac67` - Update documentation with Clear All functionality (Session 6)
-  - `965a357` - Add Clear All functionality for Favorites and Watchlist (Session 6)
-  - `8b12c59` - Change screenshot feature to PDF export with custom title (Session 6)
 
 ## Future Ideas (Post-MVP)
-- ✅ ~~Share grids as images~~ (DONE - PDF export with custom title, 3x resolution, A4 format)
-- Quality selector for PDF export (Low/Medium/High resolution)
+- ✅ ~~Share grids as images~~ (DONE - PNG export with optional custom title, adaptive 1x-3x resolution)
+- Export to PDF format (requires solving TMDB CORS restrictions)
 - Share directly to social media (Web Share API)
-- Export as PNG image in addition to PDF
 - More curated lists (Oscar winners, genre-specific)
 - Movie details modal (plot, cast, ratings)
 - Search within grids
