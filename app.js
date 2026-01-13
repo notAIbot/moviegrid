@@ -311,6 +311,9 @@ function showMovieTooltip(event, title, overview) {
   // Remove existing tooltip if any
   hideMovieTooltip();
 
+  // Capture position info BEFORE the timeout (event becomes stale)
+  const posterRect = event.currentTarget.getBoundingClientRect();
+
   // Delay tooltip appearance by 600ms
   tooltipTimeout = setTimeout(() => {
     const tooltip = document.createElement('div');
@@ -328,9 +331,8 @@ function showMovieTooltip(event, title, overview) {
     document.body.appendChild(tooltip);
 
     // Position tooltip near the poster
-    const posterRect = event.currentTarget.getBoundingClientRect();
     const tooltipHeight = 200; // Approximate height
-    const tooltipWidth = 300;
+    const tooltipWidth = 250; // Updated to match CSS max-width
 
     // Try to position to the right of the poster
     let left = posterRect.right + 10;
