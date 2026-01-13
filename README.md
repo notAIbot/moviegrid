@@ -2,9 +2,6 @@
 
 **Turn your movie lists into shareable poster grids for social media**
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://notAIbot.github.io/moviegrid/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
 ## What is MovieGrid?
 
 MovieGrid is a free, open-source web app that transforms movie lists into beautiful visual poster grids. Perfect for sharing your favorite movies on Instagram, Twitter, or any social platform. No signup required, works entirely in your browser.
