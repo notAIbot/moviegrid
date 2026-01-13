@@ -432,6 +432,7 @@ button:disabled {
 
 .book-cover,
 .movie-poster {
+  position: relative;
   width: 100%;
   aspect-ratio: 2/3;
   border-radius: 8px;
