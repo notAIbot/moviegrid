@@ -1364,44 +1364,19 @@ async function fetchTopMoviesByYear(year) {
     const data = await response.json();
 
     if (data.results && data.results.length > 0) {
-      // Get top 10 movies
+      // Get top 10 movies (without Oscar data for fast loading)
       const top10 = data.results.slice(0, 10);
 
-      // Fetch Oscar data for each movie
-      const moviesWithOscars = [];
-      for (const movie of top10) {
-        let hasOscars = false;
-
-        try {
-          // Get IMDB ID
-          await rateLimiter.throttle();
-          const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
-          const externalIdsResponse = await fetch(externalIdsUrl);
-
-          if (externalIdsResponse.ok) {
-            const externalIds = await externalIdsResponse.json();
-            if (externalIds.imdb_id) {
-              const oscarData = await fetchOscarData(externalIds.imdb_id);
-              hasOscars = oscarData !== null;
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to fetch Oscar data for ${movie.title}:`, error);
-        }
-
-        moviesWithOscars.push({
-          id: movie.id,
-          title: movie.title,
-          posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
-          releaseDate: movie.release_date,
-          rating: movie.vote_average,
-          voteCount: movie.vote_count,
-          overview: movie.overview || 'No overview available.',
-          hasOscars: hasOscars
-        });
-      }
-
-      return moviesWithOscars;
+      return top10.map(movie => ({
+        id: movie.id,
+        title: movie.title,
+        posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
+        releaseDate: movie.release_date,
+        rating: movie.vote_average,
+        voteCount: movie.vote_count,
+        overview: movie.overview || 'No overview available.',
+        hasOscars: false // Will be updated later
+      }));
     }
 
     return [];
@@ -1485,29 +1460,33 @@ async function loadMoviesByYear() {
       return;
     }
 
-    // Render grid
+    // Render grid immediately (without Oscar badges)
     renderYearGrid(movies);
 
     // Update state
     gridState.tabs.topByYear.movies = movies;
     gridState.tabs.topByYear.year = selectedYear;
 
-    // Save to cache
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify(movies));
-    } catch (e) {
-      console.warn('Failed to cache year results:', e);
-    }
-
     // Hide progress
     if (yearProgress) {
-      yearProgress.textContent = `Loaded ${movies.length} top movies from ${selectedYear}!`;
+      yearProgress.textContent = `Loaded ${movies.length} top movies from ${selectedYear}! Fetching Oscar data...`;
       setTimeout(() => {
         yearProgress.classList.remove('active');
       }, 2000);
     }
 
     console.log(`Loaded ${movies.length} movies for year ${selectedYear}`);
+
+    // Fetch Oscar data in background and add badges as they come
+    fetchOscarDataForMovies(movies).then(() => {
+      console.log('Oscar data fetch complete for year', selectedYear);
+      // Update cache with Oscar data
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(movies));
+      } catch (e) {
+        console.warn('Failed to cache year results:', e);
+      }
+    });
 
   } catch (error) {
     console.error('Failed to load movies by year:', error);
@@ -1670,41 +1649,20 @@ async function fetchTMDBTop100() {
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
-        // Fetch Oscar data for each movie
-        for (const movie of data.results) {
-          let hasOscars = false;
+        // Add movies without Oscar data first (for fast loading)
+        const pageMovies = data.results.map(movie => ({
+          id: movie.id,
+          title: movie.title,
+          posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
+          releaseDate: movie.release_date,
+          rating: movie.vote_average,
+          voteCount: movie.vote_count,
+          popularity: movie.popularity,
+          overview: movie.overview || 'No overview available.',
+          hasOscars: false // Will be updated later
+        }));
 
-          try {
-            // Get IMDB ID
-            await rateLimiter.throttle();
-            const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
-            const externalIdsResponse = await fetch(externalIdsUrl);
-
-            if (externalIdsResponse.ok) {
-              const externalIds = await externalIdsResponse.json();
-              if (externalIds.imdb_id) {
-                const oscarData = await fetchOscarData(externalIds.imdb_id);
-                hasOscars = oscarData !== null;
-              }
-            }
-          } catch (error) {
-            console.warn(`Failed to fetch Oscar data for ${movie.title}:`, error);
-          }
-
-          const movieData = {
-            id: movie.id,
-            title: movie.title,
-            posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
-            releaseDate: movie.release_date,
-            rating: movie.vote_average,
-            voteCount: movie.vote_count,
-            popularity: movie.popularity,
-            overview: movie.overview || 'No overview available.',
-            hasOscars: hasOscars
-          };
-
-          movies.push(movieData);
-        }
+        movies.push(...pageMovies);
       }
     }
 
@@ -1741,6 +1699,50 @@ function renderTMDBTop100Grid(movies) {
   });
 }
 
+// Fetch Oscar data in background and add badges dynamically
+async function fetchOscarDataForMovies(movies) {
+  for (let i = 0; i < movies.length; i++) {
+    const movie = movies[i];
+
+    try {
+      // Get IMDB ID
+      await rateLimiter.throttle();
+      const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
+      const externalIdsResponse = await fetch(externalIdsUrl);
+
+      if (externalIdsResponse.ok) {
+        const externalIds = await externalIdsResponse.json();
+        if (externalIds.imdb_id) {
+          const oscarData = await fetchOscarData(externalIds.imdb_id);
+          if (oscarData !== null) {
+            // Update movie data
+            movie.hasOscars = true;
+
+            // Add badge to the poster element
+            const posterElement = document.querySelector(`.movie-poster[data-movie-id="${movie.id}"]`);
+            if (posterElement && !posterElement.querySelector('.oscar-badge')) {
+              const oscarBadge = document.createElement('div');
+              oscarBadge.className = 'oscar-badge';
+              oscarBadge.textContent = '🏆';
+              oscarBadge.title = 'Oscar Winner';
+              posterElement.appendChild(oscarBadge);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch Oscar data for ${movie.title}:`, error);
+    }
+  }
+
+  // Update cache with Oscar data
+  try {
+    localStorage.setItem('tmdb_top_rated_v3', JSON.stringify(movies));
+  } catch (e) {
+    console.warn('Failed to cache TMDB Top 100 with Oscar data:', e);
+  }
+}
+
 // Load TMDB Top 100 movies
 async function loadTMDBTop100() {
   const imdbProgress = document.getElementById('imdbProgress');
@@ -1773,12 +1775,12 @@ async function loadTMDBTop100() {
 
   // Show progress
   if (imdbProgress) {
-    imdbProgress.textContent = 'Loading TMDB Top Rated movies with Oscar data... (This may take 1-2 minutes)';
+    imdbProgress.textContent = 'Loading TMDB Top Rated movies...';
     imdbProgress.classList.add('active');
   }
 
   try {
-    // Fetch movies
+    // Fetch movies (without Oscar data for fast loading)
     const movies = await fetchTMDBTop100();
 
     if (movies.length === 0) {
@@ -1791,29 +1793,27 @@ async function loadTMDBTop100() {
       return;
     }
 
-    // Render grid
+    // Render grid immediately (without Oscar badges)
     renderTMDBTop100Grid(movies);
 
     // Update state
     gridState.tabs.imdbTop100.movies = movies;
     gridState.tabs.imdbTop100.loaded = true;
 
-    // Save to cache
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify(movies));
-    } catch (e) {
-      console.warn('Failed to cache TMDB Top 100 results:', e);
-    }
-
     // Hide progress
     if (imdbProgress) {
-      imdbProgress.textContent = `Loaded ${movies.length} top movies!`;
+      imdbProgress.textContent = `Loaded ${movies.length} top movies! Fetching Oscar data in background...`;
       setTimeout(() => {
         imdbProgress.classList.remove('active');
       }, 2000);
     }
 
     console.log(`Loaded ${movies.length} top-rated movies from TMDB`);
+
+    // Fetch Oscar data in background and add badges as they come
+    fetchOscarDataForMovies(movies).then(() => {
+      console.log('Oscar data fetch complete');
+    });
 
   } catch (error) {
     console.error('Failed to load TMDB Top 100:', error);
