@@ -1751,9 +1751,6 @@ async function captureGridScreenshot() {
 
     console.log(`All images loaded. Movie count: ${movieCount}`);
 
-    // TMDB doesn't support CORS, so we'll use foreignObjectRendering instead
-    console.log('TMDB images detected - using SVG-based rendering to bypass CORS restrictions...');
-
     // Additional delay for rendering
     await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -1792,62 +1789,42 @@ async function captureGridScreenshot() {
       console.log('html2canvas logging enabled for debugging large grid');
     }
 
-    // Capture using html2canvas with foreignObjectRendering
-    // This uses SVG rendering which bypasses CORS restrictions entirely
-    console.log('Starting PDF capture with SVG-based rendering...');
+    // Capture using html2canvas
+    console.log('Starting screenshot capture...');
     const canvas = await html2canvas(captureElement, {
       backgroundColor: '#ffffff',
       scale: scale,
-      logging: enableLogging, // Enable logging for large grids
-      foreignObjectRendering: true, // Use SVG foreignObject (bypasses CORS!)
-      imageTimeout: captureTimeout,
-      windowWidth: captureElement.scrollWidth,
-      windowHeight: captureElement.scrollHeight
+      logging: false,
+      useCORS: true,
+      allowTaint: false,
+      imageTimeout: captureTimeout
     });
 
     console.log(`Canvas created: ${canvas.width}x${canvas.height}px`);
 
-    // Validate canvas was created with valid dimensions
-    if (!canvas || canvas.width === 0 || canvas.height === 0) {
-      throw new Error('Canvas creation failed - empty canvas generated');
-    }
-
-    console.log('Canvas validation passed - dimensions are valid');
-
-    // Convert canvas to PNG image and download
-    console.log('Converting canvas to PNG image...');
-
-    // Use toBlob for better performance with large canvases
+    // Convert canvas to blob and download
     canvas.toBlob((blob) => {
       if (!blob) {
         showNotification('Failed to create image. Please try again.');
         return;
       }
 
-      console.log(`PNG created: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
-
-      // Generate filename (change .pdf to .png)
+      // Generate filename
       const filename = generateScreenshotFilename(activeTab).replace('.pdf', '.png');
 
-      // Create download link
+      // Download the image
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
       link.download = filename;
-
-      // Trigger download
-      document.body.appendChild(link);
+      link.href = url;
       link.click();
 
       // Cleanup
-      document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
       // Show success notification
-      showNotification(`Image saved as ${filename}`);
-
-      console.log('PNG download complete');
-    }, 'image/png', 1.0); // Max quality PNG
+      showNotification(`Screenshot saved as ${filename}`);
+    }, 'image/png');
 
   } catch (error) {
     console.error('Image export failed:', error);
