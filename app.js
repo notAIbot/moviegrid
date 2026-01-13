@@ -239,11 +239,28 @@ async function searchMovie(title) {
         : null;
 
       if (posterUrl) {
+        // Fetch Oscar data
+        let hasOscars = false;
+        try {
+          const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
+          const externalIdsResponse = await fetch(externalIdsUrl);
+          if (externalIdsResponse.ok) {
+            const externalIds = await externalIdsResponse.json();
+            if (externalIds.imdb_id) {
+              const oscarData = await fetchOscarData(externalIds.imdb_id);
+              hasOscars = oscarData !== null;
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to fetch Oscar data:', error);
+        }
+
         const movieData = {
           posterUrl: posterUrl,
           id: movie.id,
           title: movie.title,
-          overview: movie.overview || 'No overview available.'
+          overview: movie.overview || 'No overview available.',
+          hasOscars: hasOscars
         };
         saveToCache(title, movieData);
         return movieData;
@@ -263,13 +280,14 @@ async function searchMovie(title) {
 // ===== UI HELPER FUNCTIONS =====
 
 // Create movie poster element
-function createMoviePoster(posterUrl, title, movieId, showActions = false, overview = '') {
+function createMoviePoster(posterUrl, title, movieId, showActions = false, overview = '', hasOscars = false) {
   const div = document.createElement('div');
   div.className = 'movie-poster';
   div.dataset.movieId = movieId;
   div.dataset.title = title;
   div.dataset.posterUrl = posterUrl;
   div.dataset.overview = overview;
+  div.dataset.hasOscars = hasOscars;
 
   // Wrap in link if we have a movie ID
   if (movieId) {
@@ -358,6 +376,15 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
     div.addEventListener('mouseleave', () => {
       hideMovieTooltip();
     });
+  }
+
+  // Add Oscar badge if movie has Oscars
+  if (hasOscars) {
+    const oscarBadge = document.createElement('div');
+    oscarBadge.className = 'oscar-badge';
+    oscarBadge.textContent = '🏆';
+    oscarBadge.title = 'Oscar Winner';
+    div.appendChild(oscarBadge);
   }
 
   return div;
@@ -492,7 +519,7 @@ function setLoading(isLoading, message = '') {
 // ===== FAVORITES & WATCHLIST MANAGEMENT =====
 
 // Add movie to favorites
-function addToFavorites(movieId, title, posterUrl, showNotif = true, overview = '') {
+function addToFavorites(movieId, title, posterUrl, showNotif = true, overview = '', hasOscars = false) {
   if (!movieId) return;
 
   // Add to state
@@ -501,6 +528,7 @@ function addToFavorites(movieId, title, posterUrl, showNotif = true, overview = 
     title,
     posterUrl,
     overview,
+    hasOscars,
     addedAt: Date.now()
   };
 
@@ -538,7 +566,7 @@ function removeFromFavorites(movieId) {
 }
 
 // Add movie to watchlist
-function addToWatchlist(movieId, title, posterUrl, showNotif = true, overview = '') {
+function addToWatchlist(movieId, title, posterUrl, showNotif = true, overview = '', hasOscars = false) {
   if (!movieId) return;
 
   // Add to state
@@ -547,6 +575,7 @@ function addToWatchlist(movieId, title, posterUrl, showNotif = true, overview = 
     title,
     posterUrl,
     overview,
+    hasOscars,
     addedAt: Date.now()
   };
 
@@ -671,11 +700,12 @@ function toggleFavorite(movieId, title, posterUrl, buttonElement) {
     // Remove from favorites
     removeFromFavorites(movieId);
   } else {
-    // Get overview from poster element
+    // Get overview and hasOscars from poster element
     const posterElement = buttonElement.closest('.movie-poster');
     const overview = posterElement ? posterElement.dataset.overview || '' : '';
+    const hasOscars = posterElement ? posterElement.dataset.hasOscars === 'true' : false;
     // Add to favorites
-    addToFavorites(movieId, title, posterUrl, true, overview);
+    addToFavorites(movieId, title, posterUrl, true, overview, hasOscars);
   }
 
   // Update all favorite buttons for this movie across the page
@@ -692,11 +722,12 @@ function toggleWatchlist(movieId, title, posterUrl, buttonElement) {
     // Remove from watchlist
     removeFromWatchlist(movieId);
   } else {
-    // Get overview from poster element
+    // Get overview and hasOscars from poster element
     const posterElement = buttonElement.closest('.movie-poster');
     const overview = posterElement ? posterElement.dataset.overview || '' : '';
+    const hasOscars = posterElement ? posterElement.dataset.hasOscars === 'true' : false;
     // Add to watchlist
-    addToWatchlist(movieId, title, posterUrl, true, overview);
+    addToWatchlist(movieId, title, posterUrl, true, overview, hasOscars);
   }
 
   // Update all watchlist buttons for this movie across the page
@@ -831,7 +862,7 @@ function renderFavoritesGrid() {
 
   // Create poster elements with action buttons
   favorites.forEach(movie => {
-    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '');
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '', movie.hasOscars || false);
 
     // Add action buttons
     const actionsDiv = document.createElement('div');
@@ -906,7 +937,7 @@ function renderWatchlistGrid() {
 
   // Create poster elements with action buttons
   watchlist.forEach(movie => {
-    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '');
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '', movie.hasOscars || false);
 
     // Add action buttons
     const actionsDiv = document.createElement('div');
@@ -1164,19 +1195,20 @@ async function generateGrid() {
 
     try {
       const movieData = await searchMovie(movie);
-      const posterElement = createMoviePoster(movieData.posterUrl, movie, movieData.id, false, movieData.overview);
+      const posterElement = createMoviePoster(movieData.posterUrl, movie, movieData.id, false, movieData.overview, movieData.hasOscars || false);
       movieGrid.appendChild(posterElement);
 
       gridState.tabs.custom.movies.push({
         title: movie,
         posterUrl: movieData.posterUrl,
         id: movieData.id,
-        overview: movieData.overview
+        overview: movieData.overview,
+        hasOscars: movieData.hasOscars || false
       });
 
     } catch (error) {
       // Show placeholder for failed movies
-      const posterElement = createMoviePoster(null, movie, null, false, '');
+      const posterElement = createMoviePoster(null, movie, null, false, '', false);
       movieGrid.appendChild(posterElement);
 
       console.warn(`Failed to fetch poster for "${movie}":`, error.message);
