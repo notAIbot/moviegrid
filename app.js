@@ -1548,8 +1548,10 @@ async function loadTMDBTop100() {
 
 /**
  * Generate filename for screenshot based on active tab
+ * @param {string} activeTab - The active tab name
+ * @param {string|null} customTitle - Optional custom title for favorites/watchlist
  */
-function generateScreenshotFilename(activeTab) {
+function generateScreenshotFilename(activeTab, customTitle = null) {
   const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
   let tabName;
@@ -1563,18 +1565,34 @@ function generateScreenshotFilename(activeTab) {
       tabName = `top-by-year-${year}`;
       break;
     case 'favorites':
-      tabName = 'favorites';
+      if (customTitle && customTitle.trim()) {
+        const sanitized = customTitle.trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        tabName = `favorites-${sanitized}`;
+      } else {
+        tabName = 'favorites';
+      }
       break;
     case 'watchlist':
-      tabName = 'watchlist';
+      if (customTitle && customTitle.trim()) {
+        const sanitized = customTitle.trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        tabName = `watchlist-${sanitized}`;
+      } else {
+        tabName = 'watchlist';
+      }
       break;
     case 'custom':
       // Use custom title if available, otherwise generic
       const customTitleInput = document.getElementById('customTitle');
-      const customTitle = customTitleInput ? customTitleInput.value.trim() : '';
-      if (customTitle) {
+      const customTitleValue = customTitleInput ? customTitleInput.value.trim() : '';
+      if (customTitleValue) {
         // Sanitize title for filename
-        const sanitized = customTitle
+        const sanitized = customTitleValue
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '');
@@ -1587,7 +1605,7 @@ function generateScreenshotFilename(activeTab) {
       tabName = 'moviegrid';
   }
 
-  return `moviegrid-${tabName}-${date}.pdf`;
+  return `moviegrid-${tabName}-${date}.png`;
 }
 
 /**
@@ -1711,6 +1729,33 @@ async function captureGridScreenshot() {
     return;
   }
 
+  // Prompt for custom title (for tabs that don't have their own titles)
+  let customTitle = null;
+  let titleElement = null;
+
+  if (activeTab === 'favorites' || activeTab === 'watchlist') {
+    const defaultTitle = activeTab === 'favorites' ? 'My Favorites' : 'My Watchlist';
+    customTitle = prompt(`Enter a custom title for your ${activeTab} (optional):`, '');
+
+    // If user clicked OK (even with empty string), we'll use it
+    // If user clicked Cancel, customTitle will be null
+    if (customTitle !== null) {
+      // Create and inject title element
+      const gridFrame = tabElement.querySelector('.grid-frame');
+      if (gridFrame) {
+        titleElement = document.createElement('div');
+        titleElement.className = 'grid-title active';
+        titleElement.textContent = customTitle.trim() || defaultTitle;
+        titleElement.style.textAlign = 'center';
+        titleElement.style.fontSize = '2rem';
+        titleElement.style.fontWeight = '700';
+        titleElement.style.marginBottom = '40px';
+        titleElement.style.color = '#333';
+        gridFrame.insertBefore(titleElement, gridFrame.firstChild);
+      }
+    }
+  }
+
   let hiddenElements = [];
 
   try {
@@ -1812,7 +1857,7 @@ async function captureGridScreenshot() {
       }
 
       // Generate filename
-      const filename = generateScreenshotFilename(activeTab).replace('.pdf', '.png');
+      const filename = generateScreenshotFilename(activeTab, customTitle);
 
       // Download the image
       const url = URL.createObjectURL(blob);
@@ -1850,6 +1895,11 @@ async function captureGridScreenshot() {
 
     // Remove capturing class
     tabElement.classList.remove('capturing-screenshot');
+
+    // Remove temporary title element if we added one
+    if (titleElement && titleElement.parentNode) {
+      titleElement.parentNode.removeChild(titleElement);
+    }
 
     // Re-enable button
     const screenshotBtn = tabElement.querySelector('.screenshot-btn');
