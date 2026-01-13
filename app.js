@@ -1795,8 +1795,7 @@ async function captureGridScreenshot() {
       backgroundColor: '#ffffff',
       scale: scale,
       logging: false,
-      useCORS: true,
-      allowTaint: false,
+      allowTaint: true,
       imageTimeout: captureTimeout
     });
 
