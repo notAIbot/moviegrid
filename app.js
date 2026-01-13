@@ -1750,14 +1750,6 @@ async function captureGridScreenshot() {
     return;
   }
 
-  // Ask user for PDF title
-  let pdfTitle = prompt('Enter a title for your PDF (or leave empty for no title):');
-  if (pdfTitle === null) {
-    // User cancelled
-    return;
-  }
-  pdfTitle = pdfTitle.trim();
-
   let hiddenElements = [];
 
   try {
@@ -1814,22 +1806,22 @@ async function captureGridScreenshot() {
       // Very large grids: use 1x scale for stability
       scale = 1;
       captureTimeout = 90000; // 90 seconds
-      showNotification(`Preparing ${movieCount} movies for PDF export. This may take up to 2 minutes...`);
+      showNotification(`Capturing ${movieCount} movies. This may take up to 2 minutes...`);
     } else if (movieCount > 100) {
       // Large grids: use 1.5x scale
       scale = isMobile ? 1 : 1.5;
       captureTimeout = 60000; // 60 seconds
-      showNotification(`Preparing ${movieCount} movies for PDF export. This may take 30-90 seconds...`);
+      showNotification(`Capturing ${movieCount} movies. This may take 30-90 seconds...`);
     } else if (movieCount > 50) {
       // Medium grids: use 2x scale
       scale = isMobile ? 1.5 : 2;
       captureTimeout = 30000; // 30 seconds
-      showNotification('Preparing PDF export...');
+      showNotification('Capturing grid...');
     } else {
       // Small grids: use 3x scale for best quality
       scale = isMobile ? 2 : 3;
       captureTimeout = 15000; // 15 seconds
-      showNotification('Generating PDF...');
+      showNotification('Generating image...');
     }
 
     console.log(`Using scale: ${scale}x, timeout: ${captureTimeout}ms`);
@@ -1862,86 +1854,44 @@ async function captureGridScreenshot() {
     }
 
     console.log('Canvas validation passed - dimensions are valid');
-    // Note: Cannot use getImageData() to check content because canvas is tainted by cross-origin images
-    // This is expected when using foreignObjectRendering with external images
 
-    // Convert canvas to PDF
-    let imgData;
-    try {
-      console.log('Converting canvas to data URL...');
-      imgData = canvas.toDataURL('image/png');
-      console.log('Successfully converted canvas to data URL');
-    } catch (error) {
-      console.error('Failed to convert canvas to data URL:', error);
-      throw new Error(`Cannot export PDF: Canvas is tainted by cross-origin images. foreignObjectRendering may not be working. Error: ${error.message}`);
-    }
+    // Convert canvas to PNG image and download
+    console.log('Converting canvas to PNG image...');
 
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-
-    console.log(`Converting to PDF... Canvas size: ${imgWidth}x${imgHeight}px`);
-
-    // Calculate PDF dimensions (in mm)
-    // A4 dimensions: 210mm x 297mm
-    // We'll use landscape or portrait based on aspect ratio
-    const aspectRatio = imgWidth / imgHeight;
-    let pdfWidth, pdfHeight;
-
-    if (aspectRatio > 1) {
-      // Landscape - wider than tall
-      pdfWidth = 297; // A4 landscape width
-      pdfHeight = pdfWidth / aspectRatio;
-    } else {
-      // Portrait - taller than wide
-      pdfHeight = 297; // A4 portrait height
-      pdfWidth = pdfHeight * aspectRatio;
-    }
-
-    // Create PDF with appropriate orientation
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: aspectRatio > 1 ? 'landscape' : 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    // Add title if provided
-    let imageYOffset = (pdf.internal.pageSize.getHeight() - pdfHeight) / 2;
-
-    if (pdfTitle) {
-      // Add title at the top
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      const titleWidth = pdf.getTextWidth(pdfTitle);
-      const titleX = (pdf.internal.pageSize.getWidth() - titleWidth) / 2;
-      pdf.text(pdfTitle, titleX, 15); // 15mm from top
-
-      // Adjust image position to be below the title
-      imageYOffset = 25; // Start image 25mm from top to leave space for title
-
-      // Recalculate image size to fit below title
-      const availableHeight = pdf.internal.pageSize.getHeight() - imageYOffset - 10; // 10mm margin at bottom
-      if (pdfHeight > availableHeight) {
-        pdfHeight = availableHeight;
-        pdfWidth = pdfHeight * aspectRatio;
+    // Use toBlob for better performance with large canvases
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        showNotification('Failed to create image. Please try again.');
+        return;
       }
-    }
 
-    // Add image to PDF (centered horizontally, positioned vertically based on title)
-    const xOffset = (pdf.internal.pageSize.getWidth() - pdfWidth) / 2;
-    pdf.addImage(imgData, 'PNG', xOffset, imageYOffset, pdfWidth, pdfHeight);
+      console.log(`PNG created: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
 
-    // Generate filename
-    const filename = generateScreenshotFilename(activeTab);
+      // Generate filename (change .pdf to .png)
+      const filename = generateScreenshotFilename(activeTab).replace('.pdf', '.png');
 
-    // Download PDF
-    pdf.save(filename);
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
 
-    // Show success notification
-    showNotification(`PDF saved as ${filename}`);
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Show success notification
+      showNotification(`Image saved as ${filename}`);
+
+      console.log('PNG download complete');
+    }, 'image/png', 1.0); // Max quality PNG
 
   } catch (error) {
-    console.error('PDF export failed:', error);
+    console.error('Image export failed:', error);
     console.error('Error details:', {
       message: error.message,
       stack: error.stack,
@@ -1950,11 +1900,11 @@ async function captureGridScreenshot() {
 
     // Show specific error message
     if (error.message && error.message.includes('canvas')) {
-      showNotification('PDF export failed: Grid too large. Try exporting a smaller selection.');
+      showNotification('Image export failed: Grid too large. Try exporting a smaller selection.');
     } else if (error.message && error.message.includes('timeout')) {
-      showNotification('PDF export timed out. The grid might be too large. Please try again or reduce the number of movies.');
+      showNotification('Image export timed out. The grid might be too large. Please try again or reduce the number of movies.');
     } else {
-      showNotification(`PDF export failed: ${error.message || 'Unknown error'}. Check console for details.`);
+      showNotification(`Image export failed: ${error.message || 'Unknown error'}. Check console for details.`);
     }
   } finally {
     // Restore all hidden elements
@@ -1967,7 +1917,7 @@ async function captureGridScreenshot() {
     const screenshotBtn = tabElement.querySelector('.screenshot-btn');
     if (screenshotBtn) {
       screenshotBtn.disabled = false;
-      screenshotBtn.textContent = '📄 Export as PDF';
+      screenshotBtn.textContent = '📸 Download as Image';
     }
   }
 }
