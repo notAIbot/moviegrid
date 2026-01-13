@@ -130,6 +130,12 @@ The Dark Knight"></textarea>
 The Shawshank Redemption
 The Godfather
 Inception"></textarea>
+        <input
+          type="text"
+          id="favoritesCustomTitle"
+          class="custom-title-input"
+          placeholder="Optional: Add a custom title for your favorites grid (e.g., 'My All-Time Favorites')"
+        >
         <div class="button-group">
           <button id="addFavoritesBtn" class="primary-btn">Add to Favorites</button>
           <label for="favoritesFileUpload" class="file-upload-btn">
@@ -145,6 +151,7 @@ Inception"></textarea>
         <p>No favorites yet! Add movies using the form above or from other tabs.</p>
       </div>
       <div class="grid-frame">
+        <div id="favoritesGridTitle" class="grid-title"></div>
         <div id="favoritesGrid" class="movie-grid"></div>
       </div>
     </div>
@@ -166,6 +173,12 @@ Inception"></textarea>
 Dune
 Oppenheimer
 The Batman"></textarea>
+        <input
+          type="text"
+          id="watchlistCustomTitle"
+          class="custom-title-input"
+          placeholder="Optional: Add a custom title for your watchlist grid (e.g., 'Movies to Watch in 2026')"
+        >
         <div class="button-group">
           <button id="addWatchlistBtn" class="primary-btn">Add to Watchlist</button>
           <label for="watchlistFileUpload" class="file-upload-btn">
@@ -181,6 +194,7 @@ The Batman"></textarea>
         <p>Your watchlist is empty! Add movies using the form above or from other tabs.</p>
       </div>
       <div class="grid-frame">
+        <div id="watchlistGridTitle" class="grid-title"></div>
         <div id="watchlistGrid" class="movie-grid"></div>
       </div>
     </div>

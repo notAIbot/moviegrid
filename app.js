@@ -45,7 +45,9 @@ const STORAGE_KEYS = {
   LAST_TAB: 'moviegrid_last_tab',
   LAST_YEAR: 'moviegrid_last_year',
   CUSTOM_TITLE: 'moviegrid_custom_title',
-  CUSTOM_INPUT: 'moviegrid_custom_input'
+  CUSTOM_INPUT: 'moviegrid_custom_input',
+  FAVORITES_CUSTOM_TITLE: 'moviegrid_favorites_custom_title',
+  WATCHLIST_CUSTOM_TITLE: 'moviegrid_watchlist_custom_title'
 };
 
 // ===== ERROR HANDLING FRAMEWORK =====
@@ -609,6 +611,7 @@ function showNotification(message) {
 function renderFavoritesGrid() {
   const favoritesGrid = document.getElementById('favoritesGrid');
   const emptyState = document.getElementById('favoritesEmpty');
+  const gridTitleElement = document.getElementById('favoritesGridTitle');
 
   if (!favoritesGrid) return;
 
@@ -620,11 +623,26 @@ function renderFavoritesGrid() {
   if (favorites.length === 0) {
     // Show empty state
     emptyState.style.display = 'block';
+    // Hide title when empty
+    if (gridTitleElement) {
+      gridTitleElement.classList.remove('active');
+    }
     return;
   }
 
   // Hide empty state
   emptyState.style.display = 'none';
+
+  // Display custom title if set
+  const customTitle = localStorage.getItem(STORAGE_KEYS.FAVORITES_CUSTOM_TITLE);
+  if (gridTitleElement) {
+    if (customTitle) {
+      gridTitleElement.textContent = customTitle;
+      gridTitleElement.classList.add('active');
+    } else {
+      gridTitleElement.classList.remove('active');
+    }
+  }
 
   // Sort by order added (oldest first = file order)
   favorites.sort((a, b) => a.addedAt - b.addedAt);
@@ -684,6 +702,7 @@ function renderFavoritesGrid() {
 function renderWatchlistGrid() {
   const watchlistGrid = document.getElementById('watchlistGrid');
   const emptyState = document.getElementById('watchlistEmpty');
+  const gridTitleElement = document.getElementById('watchlistGridTitle');
 
   if (!watchlistGrid) return;
 
@@ -695,11 +714,26 @@ function renderWatchlistGrid() {
   if (watchlist.length === 0) {
     // Show empty state
     emptyState.style.display = 'block';
+    // Hide title when empty
+    if (gridTitleElement) {
+      gridTitleElement.classList.remove('active');
+    }
     return;
   }
 
   // Hide empty state
   emptyState.style.display = 'none';
+
+  // Display custom title if set
+  const customTitle = localStorage.getItem(STORAGE_KEYS.WATCHLIST_CUSTOM_TITLE);
+  if (gridTitleElement) {
+    if (customTitle) {
+      gridTitleElement.textContent = customTitle;
+      gridTitleElement.classList.add('active');
+    } else {
+      gridTitleElement.classList.remove('active');
+    }
+  }
 
   // Sort by order added (oldest first = file order)
   watchlist.sort((a, b) => a.addedAt - b.addedAt);
@@ -909,6 +943,46 @@ customTitleInput.addEventListener('input', () => {
     localStorage.removeItem(STORAGE_KEYS.CUSTOM_TITLE);
   }
 });
+
+// Load and save custom titles for Favorites
+const favoritesCustomTitleInput = document.getElementById('favoritesCustomTitle');
+const savedFavoritesTitle = localStorage.getItem(STORAGE_KEYS.FAVORITES_CUSTOM_TITLE);
+if (savedFavoritesTitle && favoritesCustomTitleInput) {
+  favoritesCustomTitleInput.value = savedFavoritesTitle;
+}
+
+if (favoritesCustomTitleInput) {
+  favoritesCustomTitleInput.addEventListener('input', () => {
+    const title = favoritesCustomTitleInput.value.trim();
+    if (title) {
+      localStorage.setItem(STORAGE_KEYS.FAVORITES_CUSTOM_TITLE, title);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.FAVORITES_CUSTOM_TITLE);
+    }
+    // Re-render favorites grid to update title
+    renderFavoritesGrid();
+  });
+}
+
+// Load and save custom titles for Watchlist
+const watchlistCustomTitleInput = document.getElementById('watchlistCustomTitle');
+const savedWatchlistTitle = localStorage.getItem(STORAGE_KEYS.WATCHLIST_CUSTOM_TITLE);
+if (savedWatchlistTitle && watchlistCustomTitleInput) {
+  watchlistCustomTitleInput.value = savedWatchlistTitle;
+}
+
+if (watchlistCustomTitleInput) {
+  watchlistCustomTitleInput.addEventListener('input', () => {
+    const title = watchlistCustomTitleInput.value.trim();
+    if (title) {
+      localStorage.setItem(STORAGE_KEYS.WATCHLIST_CUSTOM_TITLE, title);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.WATCHLIST_CUSTOM_TITLE);
+    }
+    // Re-render watchlist grid to update title
+    renderWatchlistGrid();
+  });
+}
 
 // Initialize SortableJS
 function initializeSortable() {
@@ -1563,10 +1637,30 @@ function generateScreenshotFilename(activeTab) {
       tabName = `top-by-year-${year}`;
       break;
     case 'favorites':
-      tabName = 'favorites';
+      // Use custom title if available
+      const favoritesCustomTitle = localStorage.getItem(STORAGE_KEYS.FAVORITES_CUSTOM_TITLE);
+      if (favoritesCustomTitle) {
+        const sanitized = favoritesCustomTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        tabName = `favorites-${sanitized}`;
+      } else {
+        tabName = 'favorites';
+      }
       break;
     case 'watchlist':
-      tabName = 'watchlist';
+      // Use custom title if available
+      const watchlistCustomTitle = localStorage.getItem(STORAGE_KEYS.WATCHLIST_CUSTOM_TITLE);
+      if (watchlistCustomTitle) {
+        const sanitized = watchlistCustomTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        tabName = `watchlist-${sanitized}`;
+      } else {
+        tabName = 'watchlist';
+      }
       break;
     case 'custom':
       // Use custom title if available, otherwise generic
@@ -1587,7 +1681,7 @@ function generateScreenshotFilename(activeTab) {
       tabName = 'moviegrid';
   }
 
-  return `moviegrid-${tabName}-${date}.pdf`;
+  return `moviegrid-${tabName}-${date}.png`;
 }
 
 /**
@@ -1812,7 +1906,7 @@ async function captureGridScreenshot() {
       }
 
       // Generate filename
-      const filename = generateScreenshotFilename(activeTab).replace('.pdf', '.png');
+      const filename = generateScreenshotFilename(activeTab);
 
       // Download the image
       const url = URL.createObjectURL(blob);
