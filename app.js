@@ -176,7 +176,8 @@ async function searchMovie(title) {
         const movieData = {
           posterUrl: posterUrl,
           id: movie.id,
-          title: movie.title
+          title: movie.title,
+          overview: movie.overview || 'No overview available.'
         };
         saveToCache(title, movieData);
         return movieData;
@@ -196,12 +197,13 @@ async function searchMovie(title) {
 // ===== UI HELPER FUNCTIONS =====
 
 // Create movie poster element
-function createMoviePoster(posterUrl, title, movieId, showActions = false) {
+function createMoviePoster(posterUrl, title, movieId, showActions = false, overview = '') {
   const div = document.createElement('div');
   div.className = 'movie-poster';
   div.dataset.movieId = movieId;
   div.dataset.title = title;
   div.dataset.posterUrl = posterUrl;
+  div.dataset.overview = overview;
 
   // Wrap in link if we have a movie ID
   if (movieId) {
@@ -281,7 +283,83 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false) {
     }
   }
 
+  // Add hover tooltip for movie details
+  if (overview && movieId) {
+    div.addEventListener('mouseenter', (e) => {
+      showMovieTooltip(e, title, overview);
+    });
+
+    div.addEventListener('mouseleave', () => {
+      hideMovieTooltip();
+    });
+  }
+
   return div;
+}
+
+// Show movie tooltip on hover
+function showMovieTooltip(event, title, overview) {
+  // Remove existing tooltip if any
+  hideMovieTooltip();
+
+  const tooltip = document.createElement('div');
+  tooltip.id = 'movie-tooltip';
+  tooltip.className = 'movie-tooltip';
+
+  const titleEl = document.createElement('h4');
+  titleEl.textContent = title;
+
+  const overviewEl = document.createElement('p');
+  overviewEl.textContent = overview;
+
+  tooltip.appendChild(titleEl);
+  tooltip.appendChild(overviewEl);
+  document.body.appendChild(tooltip);
+
+  // Position tooltip near the poster
+  const posterRect = event.currentTarget.getBoundingClientRect();
+  const tooltipHeight = 200; // Approximate height
+  const tooltipWidth = 300;
+
+  // Try to position to the right of the poster
+  let left = posterRect.right + 10;
+  let top = posterRect.top;
+
+  // If tooltip would go off-screen right, position to the left
+  if (left + tooltipWidth > window.innerWidth) {
+    left = posterRect.left - tooltipWidth - 10;
+  }
+
+  // If tooltip would go off-screen left, center it
+  if (left < 0) {
+    left = Math.max(10, (window.innerWidth - tooltipWidth) / 2);
+  }
+
+  // Adjust vertical position if needed
+  if (top + tooltipHeight > window.innerHeight) {
+    top = window.innerHeight - tooltipHeight - 10;
+  }
+
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+
+  // Fade in
+  setTimeout(() => {
+    tooltip.classList.add('show');
+  }, 10);
+}
+
+// Hide movie tooltip
+function hideMovieTooltip() {
+  const tooltip = document.getElementById('movie-tooltip');
+  if (tooltip) {
+    tooltip.classList.remove('show');
+    setTimeout(() => {
+      if (tooltip.parentNode) {
+        tooltip.parentNode.removeChild(tooltip);
+      }
+    }, 200);
+  }
 }
 
 // Show/hide loading indicator
@@ -300,7 +378,7 @@ function setLoading(isLoading, message = '') {
 // ===== FAVORITES & WATCHLIST MANAGEMENT =====
 
 // Add movie to favorites
-function addToFavorites(movieId, title, posterUrl, showNotif = true) {
+function addToFavorites(movieId, title, posterUrl, showNotif = true, overview = '') {
   if (!movieId) return;
 
   // Add to state
@@ -308,6 +386,7 @@ function addToFavorites(movieId, title, posterUrl, showNotif = true) {
     id: movieId,
     title,
     posterUrl,
+    overview,
     addedAt: Date.now()
   };
 
@@ -345,7 +424,7 @@ function removeFromFavorites(movieId) {
 }
 
 // Add movie to watchlist
-function addToWatchlist(movieId, title, posterUrl, showNotif = true) {
+function addToWatchlist(movieId, title, posterUrl, showNotif = true, overview = '') {
   if (!movieId) return;
 
   // Add to state
@@ -353,6 +432,7 @@ function addToWatchlist(movieId, title, posterUrl, showNotif = true) {
     id: movieId,
     title,
     posterUrl,
+    overview,
     addedAt: Date.now()
   };
 
@@ -477,8 +557,11 @@ function toggleFavorite(movieId, title, posterUrl, buttonElement) {
     // Remove from favorites
     removeFromFavorites(movieId);
   } else {
+    // Get overview from poster element
+    const posterElement = buttonElement.closest('.movie-poster');
+    const overview = posterElement ? posterElement.dataset.overview || '' : '';
     // Add to favorites
-    addToFavorites(movieId, title, posterUrl);
+    addToFavorites(movieId, title, posterUrl, true, overview);
   }
 
   // Update all favorite buttons for this movie across the page
@@ -495,8 +578,11 @@ function toggleWatchlist(movieId, title, posterUrl, buttonElement) {
     // Remove from watchlist
     removeFromWatchlist(movieId);
   } else {
+    // Get overview from poster element
+    const posterElement = buttonElement.closest('.movie-poster');
+    const overview = posterElement ? posterElement.dataset.overview || '' : '';
     // Add to watchlist
-    addToWatchlist(movieId, title, posterUrl);
+    addToWatchlist(movieId, title, posterUrl, true, overview);
   }
 
   // Update all watchlist buttons for this movie across the page
@@ -631,7 +717,7 @@ function renderFavoritesGrid() {
 
   // Create poster elements with action buttons
   favorites.forEach(movie => {
-    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false);
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '');
 
     // Add action buttons
     const actionsDiv = document.createElement('div');
@@ -706,7 +792,7 @@ function renderWatchlistGrid() {
 
   // Create poster elements with action buttons
   watchlist.forEach(movie => {
-    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false);
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '');
 
     // Add action buttons
     const actionsDiv = document.createElement('div');
@@ -964,18 +1050,19 @@ async function generateGrid() {
 
     try {
       const movieData = await searchMovie(movie);
-      const posterElement = createMoviePoster(movieData.posterUrl, movie, movieData.id);
+      const posterElement = createMoviePoster(movieData.posterUrl, movie, movieData.id, false, movieData.overview);
       movieGrid.appendChild(posterElement);
 
       gridState.tabs.custom.movies.push({
         title: movie,
         posterUrl: movieData.posterUrl,
-        id: movieData.id
+        id: movieData.id,
+        overview: movieData.overview
       });
 
     } catch (error) {
       // Show placeholder for failed movies
-      const posterElement = createMoviePoster(null, movie);
+      const posterElement = createMoviePoster(null, movie, null, false, '');
       movieGrid.appendChild(posterElement);
 
       console.warn(`Failed to fetch poster for "${movie}":`, error.message);
@@ -1140,7 +1227,8 @@ async function fetchTopMoviesByYear(year) {
         posterPath: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : null,
         releaseDate: movie.release_date,
         rating: movie.vote_average,
-        voteCount: movie.vote_count
+        voteCount: movie.vote_count,
+        overview: movie.overview || 'No overview available.'
       }));
     }
 
@@ -1164,7 +1252,7 @@ function renderYearGrid(movies) {
 
   // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '');
     yearGrid.appendChild(posterElement);
   });
 
@@ -1417,7 +1505,8 @@ async function fetchTMDBTop100() {
           releaseDate: movie.release_date,
           rating: movie.vote_average,
           voteCount: movie.vote_count,
-          popularity: movie.popularity
+          popularity: movie.popularity,
+          overview: movie.overview || 'No overview available.'
         }));
 
         movies.push(...pageMovies);
@@ -1444,7 +1533,7 @@ function renderTMDBTop100Grid(movies) {
 
   // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '');
     imdbGrid.appendChild(posterElement);
   });
 
