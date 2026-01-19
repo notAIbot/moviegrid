@@ -416,8 +416,8 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
         break;
 
       case 'title':
-        // Title is already visible, no need to show again
-        metadataText = '';
+        // Display the movie title
+        metadataText = title || 'N/A';
         break;
 
       case 'runtime':
