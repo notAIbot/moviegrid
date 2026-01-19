@@ -512,21 +512,23 @@ button:disabled {
   top: 4px;
   right: 4px;
   font-size: 0.9rem;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(255, 215, 0, 0.3);
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 5;
   pointer-events: none;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .oscar-badge img {
-  width: 18px;
-  height: 18px;
+  width: 35px;
+  height: 35px;
   object-fit: contain;
+  filter: brightness(1.2) contrast(1.1);
 }
 
 /* Action buttons on movie posters */
