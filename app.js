@@ -1433,8 +1433,11 @@ async function loadMoviesByYear() {
     }
   }
 
-  // Disable button and show progress
+  // Disable button and show skeleton loaders
   if (loadYearBtn) loadYearBtn.disabled = true;
+  showSkeletonLoaders(yearGrid, 10);
+
+  // Show progress text
   if (yearProgress) {
     yearProgress.textContent = `Loading top 10 movies from ${selectedYear}...`;
     yearProgress.classList.add('active');
@@ -1445,6 +1448,7 @@ async function loadMoviesByYear() {
     const movies = await fetchTopMoviesByYear(selectedYear);
 
     if (movies.length === 0) {
+      hideSkeletonLoaders(yearGrid);
       if (yearProgress) {
         yearProgress.textContent = `No movies found for ${selectedYear}`;
       }
@@ -1454,7 +1458,8 @@ async function loadMoviesByYear() {
       return;
     }
 
-    // Render grid immediately (without Oscar badges)
+    // Hide skeleton loaders and render real grid
+    hideSkeletonLoaders(yearGrid);
     renderYearGrid(movies);
 
     // Update state
@@ -1484,6 +1489,7 @@ async function loadMoviesByYear() {
 
   } catch (error) {
     console.error('Failed to load movies by year:', error);
+    hideSkeletonLoaders(yearGrid);
     if (yearProgress) {
       yearProgress.textContent = error.message || 'Failed to load movies. Please try again.';
       yearProgress.style.color = '#f44336';
@@ -1737,6 +1743,37 @@ async function fetchOscarDataForMovies(movies) {
   }
 }
 
+// ===== SKELETON LOADING FUNCTIONS =====
+
+// Create skeleton poster element
+function createSkeletonPoster() {
+  const skeleton = document.createElement('div');
+  skeleton.className = 'skeleton-poster';
+  return skeleton;
+}
+
+// Show skeleton loaders in a grid
+function showSkeletonLoaders(gridElement, count = 20) {
+  if (!gridElement) return;
+
+  // Clear the grid
+  gridElement.innerHTML = '';
+
+  // Add skeleton posters
+  for (let i = 0; i < count; i++) {
+    gridElement.appendChild(createSkeletonPoster());
+  }
+}
+
+// Hide skeleton loaders
+function hideSkeletonLoaders(gridElement) {
+  if (!gridElement) return;
+
+  // Remove all skeleton posters
+  const skeletons = gridElement.querySelectorAll('.skeleton-poster');
+  skeletons.forEach(skeleton => skeleton.remove());
+}
+
 // Load TMDB Top 100 movies
 async function loadTMDBTop100() {
   const imdbProgress = document.getElementById('imdbProgress');
@@ -1767,7 +1804,10 @@ async function loadTMDBTop100() {
     }
   }
 
-  // Show progress
+  // Show skeleton loaders
+  showSkeletonLoaders(imdbGrid, 100);
+
+  // Show progress text
   if (imdbProgress) {
     imdbProgress.textContent = 'Loading TMDB Top Rated movies...';
     imdbProgress.classList.add('active');
@@ -1778,6 +1818,7 @@ async function loadTMDBTop100() {
     const movies = await fetchTMDBTop100();
 
     if (movies.length === 0) {
+      hideSkeletonLoaders(imdbGrid);
       if (imdbProgress) {
         imdbProgress.textContent = 'No movies found';
       }
@@ -1787,7 +1828,8 @@ async function loadTMDBTop100() {
       return;
     }
 
-    // Render grid immediately (without Oscar badges)
+    // Hide skeleton loaders and render real grid
+    hideSkeletonLoaders(imdbGrid);
     renderTMDBTop100Grid(movies);
 
     // Update state
@@ -1811,6 +1853,7 @@ async function loadTMDBTop100() {
 
   } catch (error) {
     console.error('Failed to load TMDB Top 100:', error);
+    hideSkeletonLoaders(imdbGrid);
     if (imdbProgress) {
       imdbProgress.textContent = error.message || 'Failed to load movies. Please try again.';
       imdbProgress.style.color = '#f44336';
