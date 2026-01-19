@@ -523,6 +523,12 @@ button:disabled {
   pointer-events: none;
 }
 
+.oscar-badge img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
 /* Action buttons on movie posters */
 .movie-actions {
   position: absolute;

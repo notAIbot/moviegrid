@@ -382,7 +382,7 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
   if (hasOscars) {
     const oscarBadge = document.createElement('div');
     oscarBadge.className = 'oscar-badge';
-    oscarBadge.textContent = '🏆';
+    oscarBadge.innerHTML = '<img src="oscar_trophy.png" alt="Oscar Winner">';
     oscarBadge.title = 'Oscar Winner';
     div.appendChild(oscarBadge);
   }
@@ -1717,7 +1717,7 @@ async function fetchOscarDataForMovies(movies) {
             if (posterElement && !posterElement.querySelector('.oscar-badge')) {
               const oscarBadge = document.createElement('div');
               oscarBadge.className = 'oscar-badge';
-              oscarBadge.textContent = '🏆';
+              oscarBadge.innerHTML = '<img src="oscar_trophy.png" alt="Oscar Winner">';
               oscarBadge.title = 'Oscar Winner';
               posterElement.appendChild(oscarBadge);
             }
