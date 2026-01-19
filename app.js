@@ -1334,14 +1334,8 @@ if (yearSelect) {
   });
 }
 
-// Load last active tab from localStorage
-const lastActiveTab = localStorage.getItem(STORAGE_KEYS.LAST_TAB);
-if (lastActiveTab && ['custom', 'imdbTop100', 'topByYear', 'favorites', 'watchlist'].includes(lastActiveTab)) {
-  switchTab(lastActiveTab);
-} else {
-  // Default to TMDB Top 100 tab
-  switchTab('imdbTop100');
-}
+// Always default to TMDB Top 100 tab on page load
+switchTab('imdbTop100');
 
 // ===== TOP 10 BY YEAR (PHASE 8) =====
 
