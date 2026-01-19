@@ -1398,6 +1398,8 @@ function switchTab(tabName) {
   // Auto-load content based on tab
   if (tabName === 'imdbTop100') {
     loadTMDBTop100();
+  } else if (tabName === 'topByYear') {
+    loadMoviesByYear();
   } else if (tabName === 'favorites') {
     // Apply saved sort preference
     const savedSort = localStorage.getItem('sort_favorites') || 'rating';
@@ -1445,11 +1447,12 @@ if (yearSelect) {
     gridState.tabs.topByYear.year = currentYear;
   }
 
-  // Save year selection to localStorage
+  // Auto-load movies when year changes
   yearSelect.addEventListener('change', () => {
     const selectedYear = parseInt(yearSelect.value);
     gridState.tabs.topByYear.year = selectedYear;
     localStorage.setItem(STORAGE_KEYS.LAST_YEAR, selectedYear);
+    loadMoviesByYear();
   });
 }
 
@@ -1609,7 +1612,6 @@ function renderYearGrid(movies, sortCriteria = null) {
 // Load movies for selected year
 async function loadMoviesByYear() {
   const yearSelect = document.getElementById('yearSelect');
-  const loadYearBtn = document.getElementById('loadYearBtn');
   const yearProgress = document.getElementById('yearProgress');
   const yearGrid = document.getElementById('yearGrid');
 
@@ -1641,8 +1643,7 @@ async function loadMoviesByYear() {
     }
   }
 
-  // Disable button and show skeleton loaders
-  if (loadYearBtn) loadYearBtn.disabled = true;
+  // Show skeleton loaders
   showSkeletonLoaders(yearGrid, 10);
 
   // Show progress text
@@ -1715,15 +1716,7 @@ async function loadMoviesByYear() {
         yearProgress.style.color = '';
       }, 5000);
     }
-  } finally {
-    if (loadYearBtn) loadYearBtn.disabled = false;
   }
-}
-
-// Add event listener to Load Movies button
-const loadYearBtn = document.getElementById('loadYearBtn');
-if (loadYearBtn) {
-  loadYearBtn.addEventListener('click', loadMoviesByYear);
 }
 
 // ===== FAVORITES & WATCHLIST INPUT HANDLERS =====
