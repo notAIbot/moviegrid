@@ -34,6 +34,7 @@
       <button class="tab-btn" data-tab="favorites">My Favorites</button>
       <button class="tab-btn" data-tab="watchlist">My Watchlist</button>
       <button class="tab-btn" data-tab="custom">Custom Grid</button>
+      <button class="tab-btn" data-tab="help">❓ Help</button>
     </nav>
 
     <!-- Custom Grid Tab -->
@@ -223,6 +224,322 @@ The Batman"></textarea>
       </div>
       <div class="grid-frame">
         <div id="watchlistGrid" class="movie-grid"></div>
+      </div>
+    </div>
+
+    <!-- Help Tab -->
+    <div class="tab-content" id="helpTab">
+      <div class="help-container">
+        <div class="help-header">
+          <h1>❓ Help & Guide</h1>
+          <p>Everything you need to know about using MovieGrid</p>
+        </div>
+
+        <!-- Quick Start -->
+        <section class="help-section">
+          <h2>🚀 Quick Start</h2>
+          <p>MovieGrid helps you create beautiful movie poster grids to share on social media. Choose from our curated lists or create your own custom grid!</p>
+
+          <div class="help-steps">
+            <div class="help-step">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <h3>Choose a Tab</h3>
+                <p>Select from TMDB Top 100, Top 10 by Year, Favorites, Watchlist, or Custom Grid</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <h3>Browse or Create</h3>
+                <p>View curated lists or paste your own movie titles</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <h3>Customize</h3>
+                <p>Drag to reorder, sort by rating/year, add to Favorites/Watchlist</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <span class="step-number">4</span>
+              <div class="step-content">
+                <h3>Export & Share</h3>
+                <p>Click "📸 Download as Image" to save and share your grid</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab Guide -->
+        <section class="help-section">
+          <h2>📑 Tab Guide</h2>
+
+          <div class="help-item">
+            <h3>🎬 TMDB Top 100</h3>
+            <p>Browse the 100 most popular highly-rated movies from The Movie Database. The list loads automatically and updates based on TMDB's current rankings.</p>
+            <ul>
+              <li>Auto-loads when you visit the tab</li>
+              <li>Sort by rating, year, title, runtime, or Oscar wins</li>
+              <li>Cached for fast subsequent visits</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>📅 Top 10 by Year</h3>
+            <p>Explore the best movies from any year between 1900 and today.</p>
+            <ul>
+              <li>Select a year from the dropdown</li>
+              <li>Movies load automatically when you change the year</li>
+              <li>Shows top 10 highest-rated movies from that year</li>
+              <li>Results are cached for instant access</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>❤️ My Favorites</h3>
+            <p>Save and manage your favorite movies in one place.</p>
+            <ul>
+              <li><strong>Add movies:</strong> Click the heart icon (❤️) on any poster, or paste titles in the text box</li>
+              <li><strong>Bulk add:</strong> Upload a .txt file with one movie title per line</li>
+              <li><strong>Remove:</strong> Click the × button on any poster, or use "Clear All"</li>
+              <li><strong>Export with title:</strong> Add a custom title when downloading (e.g., "My Top 50")</li>
+              <li>All changes save automatically to your browser</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>📋 My Watchlist</h3>
+            <p>Track movies you want to watch.</p>
+            <ul>
+              <li><strong>Add movies:</strong> Click the clipboard icon (📋) on any poster, or paste titles</li>
+              <li><strong>Bulk add:</strong> Upload a .txt file with movie titles</li>
+              <li><strong>Remove:</strong> Click × on posters or use "Clear All"</li>
+              <li><strong>Move to Favorites:</strong> Click the heart icon to move from Watchlist to Favorites</li>
+              <li>Data stored in your browser's localStorage</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>✏️ Custom Grid</h3>
+            <p>Create your own custom movie grid from scratch.</p>
+            <ul>
+              <li>Paste movie titles (one per line) in the text box</li>
+              <li>Add an optional custom title for your grid</li>
+              <li>Click "Generate Movie Grid" to fetch posters</li>
+              <li>Works with Hollywood, Bollywood, and international films</li>
+              <li>Drag posters to reorder after generation</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Features Guide -->
+        <section class="help-section">
+          <h2>✨ Features</h2>
+
+          <div class="help-item">
+            <h3>🎯 Action Buttons</h3>
+            <p>Hover over any movie poster to see action buttons at the bottom:</p>
+            <ul>
+              <li><strong>❤️ Heart:</strong> Add/remove from Favorites (turns red when active)</li>
+              <li><strong>📋 Clipboard:</strong> Add/remove from Watchlist (turns blue when active)</li>
+              <li><strong>× Remove:</strong> Appears only on Favorites/Watchlist tabs to remove movies</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>🔀 Drag & Drop Reordering</h3>
+            <p>Click and drag any movie poster to rearrange your grid:</p>
+            <ul>
+              <li>Click and hold on a poster</li>
+              <li>Drag to the desired position</li>
+              <li>Release to drop it in place</li>
+              <li>Works on all tabs with movie grids</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>🔢 Sorting Options</h3>
+            <p>Use the "Sort by" dropdown to organize your movies:</p>
+            <ul>
+              <li><strong>Rating:</strong> Highest to lowest TMDB rating</li>
+              <li><strong>Year:</strong> Newest to oldest release year</li>
+              <li><strong>Title:</strong> Alphabetical (A-Z)</li>
+              <li><strong>Runtime:</strong> Longest to shortest duration</li>
+              <li><strong>Oscar Wins:</strong> Most Academy Awards to least</li>
+              <li><strong>Date Added:</strong> (Favorites/Watchlist only) Order you added them</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>📸 Export as Image</h3>
+            <p>Download your grid as a high-quality PNG image:</p>
+            <ul>
+              <li>Click the "📸 Download as Image" button (bottom-right corner)</li>
+              <li>For Favorites/Watchlist: Add an optional custom title when prompted</li>
+              <li>Image quality adapts automatically based on grid size</li>
+              <li>Action buttons are hidden in the exported image for a clean look</li>
+              <li>Perfect for sharing on Instagram, Twitter, or other social media</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>🏆 Oscar Information</h3>
+            <p>Oscar-winning movies display special indicators:</p>
+            <ul>
+              <li>Small trophy badge (🏆) appears on posters of Academy Award winners</li>
+              <li>Hover over any poster to see full movie details including Oscar count</li>
+              <li>Sort by "Oscar Wins" to see the most decorated films first</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="help-section">
+          <h2>❔ Frequently Asked Questions</h2>
+
+          <div class="faq-item">
+            <h3>Do I need to create an account?</h3>
+            <p>No! MovieGrid works entirely in your browser without any signup or login required.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Where is my data stored?</h3>
+            <p>All your data (Favorites, Watchlist, preferences) is stored locally in your browser's localStorage. This means:</p>
+            <ul>
+              <li>Your data never leaves your device</li>
+              <li>No servers, no cloud storage</li>
+              <li>Private and secure</li>
+              <li>Data persists across browser sessions</li>
+              <li>Clearing browser data will delete your saved movies</li>
+            </ul>
+          </div>
+
+          <div class="faq-item">
+            <h3>Will my Favorites/Watchlist sync across devices?</h3>
+            <p>No, because data is stored locally in your browser. Each device maintains its own separate list.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Can I use this offline?</h3>
+            <p>Partially. Once movies are loaded and cached, you can view them offline. However, you need an internet connection to search for new movies or fetch fresh data from TMDB.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>What if a movie isn't found?</h3>
+            <p>MovieGrid searches The Movie Database (TMDB). If a movie isn't found:</p>
+            <ul>
+              <li>Check the spelling and try again</li>
+              <li>Try the original title (not translated)</li>
+              <li>Try including the year (e.g., "Avatar 2009")</li>
+              <li>Very obscure or unreleased films may not be in TMDB yet</li>
+            </ul>
+          </div>
+
+          <div class="faq-item">
+            <h3>Can I create grids with more than 100 movies?</h3>
+            <p>Yes! The Custom Grid, Favorites, and Watchlist tabs support unlimited movies. However, very large grids (200+ movies) may take longer to export as images.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>What's the difference between Favorites and Watchlist?</h3>
+            <p>It's up to you! Typically:</p>
+            <ul>
+              <li><strong>Favorites:</strong> Movies you've watched and love</li>
+              <li><strong>Watchlist:</strong> Movies you want to watch but haven't yet</li>
+            </ul>
+            <p>You can use them however you like - both have the same features.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>How do I share my grid on Instagram?</h3>
+            <ol>
+              <li>Click "📸 Download as Image" to save your grid</li>
+              <li>Open Instagram and create a new post</li>
+              <li>Upload the downloaded PNG image</li>
+              <li>Add your caption and share!</li>
+            </ol>
+          </div>
+
+          <div class="faq-item">
+            <h3>Is MovieGrid free?</h3>
+            <p>Yes, completely free! No ads, no premium features, no hidden costs.</p>
+          </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section class="help-section">
+          <h2>🔧 Troubleshooting</h2>
+
+          <div class="help-item">
+            <h3>Movies not loading</h3>
+            <ul>
+              <li>Check your internet connection</li>
+              <li>The TMDB API may be temporarily down - try again in a few minutes</li>
+              <li>Clear your browser cache and reload the page</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>Image export is blank or incomplete</h3>
+            <ul>
+              <li>Wait for all posters to fully load before clicking "Download as Image"</li>
+              <li>For very large grids (150+ movies), be patient - it may take 30-60 seconds</li>
+              <li>Try using a modern browser (Chrome, Firefox, Safari, Edge)</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>Action buttons (heart/clipboard) not visible</h3>
+            <ul>
+              <li>Hover your mouse over the movie poster to reveal buttons</li>
+              <li>On mobile, tap and hold the poster</li>
+              <li>If buttons are active (red/blue), they stay visible</li>
+            </ul>
+          </div>
+
+          <div class="help-item">
+            <h3>Lost my Favorites/Watchlist</h3>
+            <ul>
+              <li>Check if you're using the same browser and device</li>
+              <li>Clearing browser data/cookies will delete saved lists</li>
+              <li>Try using the same browser profile (not incognito mode)</li>
+              <li>Consider downloading your grid as an image backup</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Tips & Tricks -->
+        <section class="help-section">
+          <h2>💡 Tips & Tricks</h2>
+          <ul class="tips-list">
+            <li><strong>Bulk upload:</strong> Create a .txt file with movie titles (one per line) and use the "📁 Upload Text File" button for quick imports</li>
+            <li><strong>Custom titles:</strong> When exporting Favorites or Watchlist, add a descriptive title like "My Summer 2024 Watchlist" or "Top 50 Sci-Fi Films"</li>
+            <li><strong>Drag to perfect order:</strong> After sorting, fine-tune the order by dragging individual posters</li>
+            <li><strong>Year discovery:</strong> Use "Top 10 by Year" to explore different decades of cinema</li>
+            <li><strong>Oscar hunting:</strong> Sort by "Oscar Wins" to see the most awarded films</li>
+            <li><strong>International films:</strong> MovieGrid works with films from all countries - try Bollywood, Korean, Japanese, French cinema!</li>
+            <li><strong>Grid size:</strong> Square grids (9, 16, 25, 36 movies) look best on Instagram</li>
+          </ul>
+        </section>
+
+        <!-- About -->
+        <section class="help-section">
+          <h2>ℹ️ About MovieGrid</h2>
+          <p>MovieGrid is a free, open-source web app created to help movie lovers share their passion visually. Built with pure HTML, CSS, and JavaScript, it uses The Movie Database (TMDB) API for movie data and posters.</p>
+
+          <div class="help-links">
+            <p><strong>Links:</strong></p>
+            <ul>
+              <li><a href="https://github.com/notAIbot/moviegrid" target="_blank">GitHub Repository</a></li>
+              <li><a href="https://github.com/notAIbot/moviegrid/issues" target="_blank">Report an Issue</a></li>
+              <li><a href="https://www.themoviedb.org/" target="_blank">TMDB Website</a></li>
+            </ul>
+          </div>
+
+          <p class="help-credit">Created by <a href="https://github.com/notAIbot" target="_blank">notAIbot</a> with ❤️ for movie lovers everywhere</p>
+        </section>
       </div>
     </div>
 

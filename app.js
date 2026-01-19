@@ -1387,7 +1387,8 @@ function switchTab(tabName) {
     imdbTop100: 'imdbTop100Tab',
     topByYear: 'topByYearTab',
     favorites: 'favoritesTab',
-    watchlist: 'watchlistTab'
+    watchlist: 'watchlistTab',
+    help: 'helpTab'
   };
 
   const selectedTab = document.getElementById(tabIdMap[tabName]);
@@ -2339,7 +2340,8 @@ async function captureGridScreenshot() {
     imdbTop100: 'imdbTop100Tab',
     topByYear: 'topByYearTab',
     favorites: 'favoritesTab',
-    watchlist: 'watchlistTab'
+    watchlist: 'watchlistTab',
+    help: 'helpTab'
   };
 
   const tabId = tabIdMap[activeTab];
