@@ -48,7 +48,7 @@ const STORAGE_KEYS = {
   LAST_YEAR: 'moviegrid_last_year',
   CUSTOM_TITLE: 'moviegrid_custom_title',
   CUSTOM_INPUT: 'moviegrid_custom_input',
-  OSCAR_CACHE: 'moviegrid_oscar_cache_v2' // v2: changed emoji to image
+  OSCAR_CACHE: 'moviegrid_oscar_cache_v3' // v3: store count for sorting
 };
 
 // ===== ERROR HANDLING FRAMEWORK =====
@@ -191,11 +191,20 @@ async function fetchOscarData(imdbId) {
       // Extract Oscar wins from Awards string
       // Example: "Won 11 Oscars. 126 wins & 84 nominations total"
       const oscarMatch = data.Awards.match(/Won (\d+) Oscar/i);
-      const oscarData = oscarMatch ? `<img src="oscar_trophy.png" class="oscar-icon-inline" alt="Oscar"> Won ${oscarMatch[1]} Oscar${oscarMatch[1] !== '1' ? 's' : ''}` : null;
+      if (oscarMatch) {
+        const oscarCount = parseInt(oscarMatch[1]);
+        const oscarData = {
+          html: `<img src="oscar_trophy.png" class="oscar-icon-inline" alt="Oscar"> Won ${oscarCount} Oscar${oscarCount !== 1 ? 's' : ''}`,
+          count: oscarCount
+        };
+        // Cache the result
+        saveToOscarCache(imdbId, oscarData);
+        return oscarData;
+      }
 
-      // Cache the result (even if null)
-      saveToOscarCache(imdbId, oscarData);
-      return oscarData;
+      // No Oscars - cache null result
+      saveToOscarCache(imdbId, null);
+      return null;
     }
 
     return null;
@@ -438,7 +447,7 @@ async function showMovieTooltip(event, title, overview, movieId = null) {
     if (oscarInfo) {
       const oscarEl = document.createElement('div');
       oscarEl.className = 'oscar-info';
-      oscarEl.innerHTML = oscarInfo;
+      oscarEl.innerHTML = oscarInfo.html || oscarInfo; // Handle both old string format and new object format
       tooltip.appendChild(titleEl);
       tooltip.appendChild(oscarEl);
     } else {
@@ -1334,6 +1343,82 @@ if (yearSelect) {
   });
 }
 
+// ===== SORT DROPDOWN EVENT LISTENERS =====
+
+// TMDB Top 100 sort dropdown
+const sortImdbTop100 = document.getElementById('sortImdbTop100');
+if (sortImdbTop100) {
+  sortImdbTop100.addEventListener('change', (e) => {
+    const sortBy = e.target.value;
+    const sortedMovies = sortMovies(gridState.tabs.imdbTop100.movies, sortBy);
+    gridState.tabs.imdbTop100.movies = sortedMovies;
+    renderTMDBTop100Grid(sortedMovies);
+    // Save preference to localStorage
+    localStorage.setItem('sort_imdb_top100', sortBy);
+  });
+  // Load saved preference
+  const savedSort = localStorage.getItem('sort_imdb_top100');
+  if (savedSort) {
+    sortImdbTop100.value = savedSort;
+  }
+}
+
+// Top by Year sort dropdown
+const sortTopByYear = document.getElementById('sortTopByYear');
+if (sortTopByYear) {
+  sortTopByYear.addEventListener('change', (e) => {
+    const sortBy = e.target.value;
+    const sortedMovies = sortMovies(gridState.tabs.topByYear.movies, sortBy);
+    gridState.tabs.topByYear.movies = sortedMovies;
+    renderYearGrid(sortedMovies);
+    // Save preference to localStorage
+    localStorage.setItem('sort_top_by_year', sortBy);
+  });
+  // Load saved preference
+  const savedSort = localStorage.getItem('sort_top_by_year');
+  if (savedSort) {
+    sortTopByYear.value = savedSort;
+  }
+}
+
+// Favorites sort dropdown
+const sortFavorites = document.getElementById('sortFavorites');
+if (sortFavorites) {
+  sortFavorites.addEventListener('change', (e) => {
+    const sortBy = e.target.value;
+    // Convert favorites object to array
+    const favoritesArray = Object.values(gridState.tabs.favorites.movies);
+    const sortedMovies = sortMovies(favoritesArray, sortBy);
+    renderFavoritesGrid(sortedMovies);
+    // Save preference to localStorage
+    localStorage.setItem('sort_favorites', sortBy);
+  });
+  // Load saved preference
+  const savedSort = localStorage.getItem('sort_favorites');
+  if (savedSort) {
+    sortFavorites.value = savedSort;
+  }
+}
+
+// Watchlist sort dropdown
+const sortWatchlist = document.getElementById('sortWatchlist');
+if (sortWatchlist) {
+  sortWatchlist.addEventListener('change', (e) => {
+    const sortBy = e.target.value;
+    // Convert watchlist object to array
+    const watchlistArray = Object.values(gridState.tabs.watchlist.movies);
+    const sortedMovies = sortMovies(watchlistArray, sortBy);
+    renderWatchlistGrid(sortedMovies);
+    // Save preference to localStorage
+    localStorage.setItem('sort_watchlist', sortBy);
+  });
+  // Load saved preference
+  const savedSort = localStorage.getItem('sort_watchlist');
+  if (savedSort) {
+    sortWatchlist.value = savedSort;
+  }
+}
+
 // Always default to TMDB Top 100 tab on page load
 switchTab('imdbTop100');
 
@@ -1468,7 +1553,7 @@ async function loadMoviesByYear() {
 
     // Hide progress
     if (yearProgress) {
-      yearProgress.textContent = `Loaded ${movies.length} top movies from ${selectedYear}! Fetching Oscar data...`;
+      yearProgress.textContent = `Loaded ${movies.length} top movies from ${selectedYear}! Fetching details...`;
       setTimeout(() => {
         yearProgress.classList.remove('active');
       }, 2000);
@@ -1476,9 +1561,9 @@ async function loadMoviesByYear() {
 
     console.log(`Loaded ${movies.length} movies for year ${selectedYear}`);
 
-    // Fetch Oscar data in background and add badges as they come
+    // Fetch Oscar data and runtime in background
     fetchOscarDataForMovies(movies).then(() => {
-      console.log('Oscar data fetch complete for year', selectedYear);
+      console.log('Movie details fetch complete for year', selectedYear);
       // Update cache with Oscar data
       try {
         localStorage.setItem(cacheKey, JSON.stringify(movies));
@@ -1699,24 +1784,32 @@ function renderTMDBTop100Grid(movies) {
   });
 }
 
-// Fetch Oscar data in background and add badges dynamically
+// Fetch Oscar data and runtime in background
 async function fetchOscarDataForMovies(movies) {
   for (let i = 0; i < movies.length; i++) {
     const movie = movies[i];
 
     try {
-      // Get IMDB ID
+      // Get movie details (includes runtime)
       await rateLimiter.throttle();
-      const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movie.id}/external_ids?api_key=${TMDB_API_KEY}`;
-      const externalIdsResponse = await fetch(externalIdsUrl);
+      const detailsUrl = `${TMDB_BASE_URL}/movie/${movie.id}?api_key=${TMDB_API_KEY}`;
+      const detailsResponse = await fetch(detailsUrl);
 
-      if (externalIdsResponse.ok) {
-        const externalIds = await externalIdsResponse.json();
-        if (externalIds.imdb_id) {
-          const oscarData = await fetchOscarData(externalIds.imdb_id);
+      if (detailsResponse.ok) {
+        const details = await detailsResponse.json();
+
+        // Store runtime
+        if (details.runtime) {
+          movie.runtime = details.runtime;
+        }
+
+        // Get IMDB ID for Oscar data
+        if (details.imdb_id) {
+          const oscarData = await fetchOscarData(details.imdb_id);
           if (oscarData !== null) {
             // Update movie data
             movie.hasOscars = true;
+            movie.oscarCount = oscarData.count || 0; // Store the actual Oscar count for sorting
 
             // Add badge to the poster element
             const posterElement = document.querySelector(`.movie-poster[data-movie-id="${movie.id}"]`);
@@ -1731,15 +1824,15 @@ async function fetchOscarDataForMovies(movies) {
         }
       }
     } catch (error) {
-      console.warn(`Failed to fetch Oscar data for ${movie.title}:`, error);
+      console.warn(`Failed to fetch details for ${movie.title}:`, error);
     }
   }
 
-  // Update cache with Oscar data
+  // Update cache with Oscar data and runtime
   try {
-    localStorage.setItem('tmdb_top_rated_v3', JSON.stringify(movies));
+    localStorage.setItem('tmdb_top_rated_v4', JSON.stringify(movies));
   } catch (e) {
-    console.warn('Failed to cache TMDB Top 100 with Oscar data:', e);
+    console.warn('Failed to cache TMDB Top 100 with enriched data:', e);
   }
 }
 
@@ -1774,6 +1867,66 @@ function hideSkeletonLoaders(gridElement) {
   skeletons.forEach(skeleton => skeleton.remove());
 }
 
+// ===== SORT FUNCTIONS =====
+
+// Sort movies array by specified criteria
+function sortMovies(movies, sortBy) {
+  const sorted = [...movies]; // Create a copy to avoid mutating original
+
+  switch (sortBy) {
+    case 'rating':
+      // Sort by vote_average (high to low)
+      return sorted.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+
+    case 'year':
+      // Sort by release_date (newest first)
+      return sorted.sort((a, b) => {
+        const yearA = a.release_date ? parseInt(a.release_date.substring(0, 4)) : 0;
+        const yearB = b.release_date ? parseInt(b.release_date.substring(0, 4)) : 0;
+        return yearB - yearA;
+      });
+
+    case 'title':
+      // Sort by title (A-Z)
+      return sorted.sort((a, b) => {
+        const titleA = (a.title || '').toLowerCase();
+        const titleB = (b.title || '').toLowerCase();
+        return titleA.localeCompare(titleB);
+      });
+
+    case 'runtime':
+      // Sort by runtime (longest first)
+      return sorted.sort((a, b) => {
+        const runtimeA = a.runtime || 0;
+        const runtimeB = b.runtime || 0;
+        return runtimeB - runtimeA;
+      });
+
+    case 'oscars':
+      // Sort by Oscar wins (most to least)
+      const result = sorted.sort((a, b) => {
+        const countA = a.oscarCount || 0;
+        const countB = b.oscarCount || 0;
+        // Sort by count descending (most Oscars first)
+        if (countB !== countA) {
+          return countB - countA;
+        }
+        // If same Oscar count, sort by rating
+        return (b.vote_average || 0) - (a.vote_average || 0);
+      });
+      // Debug: log top 5 movies with their Oscar counts
+      console.log('Top 5 after Oscar sort:', result.slice(0, 5).map(m => ({ title: m.title, oscars: m.oscarCount || 0 })));
+      return result;
+
+    case 'added':
+      // Sort by addedAt timestamp (oldest first) - for Favorites/Watchlist
+      return sorted.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+
+    default:
+      return sorted;
+  }
+}
+
 // Load TMDB Top 100 movies
 async function loadTMDBTop100() {
   const imdbProgress = document.getElementById('imdbProgress');
@@ -1787,8 +1940,8 @@ async function loadTMDBTop100() {
     return;
   }
 
-  // Check cache first (v3 = using top_rated endpoint with Oscar data)
-  const cacheKey = 'tmdb_top_rated_v3';
+  // Check cache first (v4 = with Oscar count for sorting)
+  const cacheKey = 'tmdb_top_rated_v4';
   const cached = localStorage.getItem(cacheKey);
 
   if (cached) {
@@ -1838,7 +1991,7 @@ async function loadTMDBTop100() {
 
     // Hide progress
     if (imdbProgress) {
-      imdbProgress.textContent = `Loaded ${movies.length} top movies! Fetching Oscar data in background...`;
+      imdbProgress.textContent = `Loaded ${movies.length} top movies! Fetching details...`;
       setTimeout(() => {
         imdbProgress.classList.remove('active');
       }, 2000);
@@ -1846,9 +1999,9 @@ async function loadTMDBTop100() {
 
     console.log(`Loaded ${movies.length} top-rated movies from TMDB`);
 
-    // Fetch Oscar data in background and add badges as they come
+    // Fetch Oscar data and runtime in background
     fetchOscarDataForMovies(movies).then(() => {
-      console.log('Oscar data fetch complete');
+      console.log('Movie details fetch complete');
     });
 
   } catch (error) {

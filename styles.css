@@ -184,6 +184,47 @@ header {
   border-color: #4a9eff;
 }
 
+/* Sort Controls */
+.sort-controls {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.sort-controls label {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.sort-select {
+  padding: 10px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  min-width: 200px;
+}
+
+.sort-select:hover {
+  border-color: #4a9eff;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+}
+
 /* Empty State */
 .empty-state {
   background: white;

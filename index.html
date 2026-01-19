@@ -85,6 +85,16 @@ The Dark Knight"></textarea>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
       </button>
+      <div class="sort-controls">
+        <label for="sortImdbTop100">Sort by:</label>
+        <select id="sortImdbTop100" class="sort-select">
+          <option value="rating">Rating (High to Low)</option>
+          <option value="year">Year (Newest First)</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="runtime">Runtime (Longest First)</option>
+          <option value="oscars">Oscar Wins</option>
+        </select>
+      </div>
       <div id="imdbProgress" class="progress"></div>
       <div class="grid-frame">
         <div id="imdbGrid" class="movie-grid"></div>
@@ -107,6 +117,16 @@ The Dark Knight"></textarea>
         </select>
         <button id="loadYearBtn">Load Movies</button>
       </div>
+      <div class="sort-controls">
+        <label for="sortTopByYear">Sort by:</label>
+        <select id="sortTopByYear" class="sort-select">
+          <option value="rating">Rating (High to Low)</option>
+          <option value="year">Year (Newest First)</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="runtime">Runtime (Longest First)</option>
+          <option value="oscars">Oscar Wins</option>
+        </select>
+      </div>
       <div id="yearProgress" class="progress"></div>
       <div class="grid-frame">
         <div id="yearGrid" class="movie-grid"></div>
@@ -122,6 +142,17 @@ The Dark Knight"></textarea>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
       </button>
+      <div class="sort-controls">
+        <label for="sortFavorites">Sort by:</label>
+        <select id="sortFavorites" class="sort-select">
+          <option value="added">Date Added (Oldest First)</option>
+          <option value="rating">Rating (High to Low)</option>
+          <option value="year">Year (Newest First)</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="runtime">Runtime (Longest First)</option>
+          <option value="oscars">Oscar Wins</option>
+        </select>
+      </div>
 
       <div class="input-section">
         <h3>Add Movies to Favorites</h3>
@@ -158,6 +189,17 @@ Inception"></textarea>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
       </button>
+      <div class="sort-controls">
+        <label for="sortWatchlist">Sort by:</label>
+        <select id="sortWatchlist" class="sort-select">
+          <option value="added">Date Added (Oldest First)</option>
+          <option value="rating">Rating (High to Low)</option>
+          <option value="year">Year (Newest First)</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="runtime">Runtime (Longest First)</option>
+          <option value="oscars">Oscar Wins</option>
+        </select>
+      </div>
 
       <div class="input-section">
         <h3>Add Movies to Watchlist</h3>
