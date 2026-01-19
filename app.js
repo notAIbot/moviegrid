@@ -1950,14 +1950,20 @@ function sortMovies(movies, sortBy) {
 
   switch (sortBy) {
     case 'rating':
-      // Sort by vote_average (high to low)
-      return sorted.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+      // Sort by rating (high to low) - handles both vote_average and rating properties
+      return sorted.sort((a, b) => {
+        const ratingA = a.vote_average || a.rating || 0;
+        const ratingB = b.vote_average || b.rating || 0;
+        return ratingB - ratingA;
+      });
 
     case 'year':
-      // Sort by release_date (newest first)
+      // Sort by release date (newest first) - handles both release_date and releaseDate properties
       return sorted.sort((a, b) => {
-        const yearA = a.release_date ? parseInt(a.release_date.substring(0, 4)) : 0;
-        const yearB = b.release_date ? parseInt(b.release_date.substring(0, 4)) : 0;
+        const dateA = a.release_date || a.releaseDate || '';
+        const dateB = b.release_date || b.releaseDate || '';
+        const yearA = dateA ? parseInt(dateA.substring(0, 4)) : 0;
+        const yearB = dateB ? parseInt(dateB.substring(0, 4)) : 0;
         return yearB - yearA;
       });
 
@@ -1987,7 +1993,9 @@ function sortMovies(movies, sortBy) {
           return countB - countA;
         }
         // If same Oscar count, sort by rating
-        return (b.vote_average || 0) - (a.vote_average || 0);
+        const ratingA = a.vote_average || a.rating || 0;
+        const ratingB = b.vote_average || b.rating || 0;
+        return ratingB - ratingA;
       });
       // Debug: log top 5 movies with their Oscar counts
       console.log('Top 5 after Oscar sort:', result.slice(0, 5).map(m => ({ title: m.title, oscars: m.oscarCount || 0 })));
