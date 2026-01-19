@@ -572,19 +572,40 @@ button:disabled {
   filter: brightness(1.2) contrast(1.1);
 }
 
-/* Movie metadata (displayed when sorting) */
-.movie-metadata {
+/* Movie title (always displayed) */
+.movie-title {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.75) 80%, transparent 100%);
   color: #fff;
-  padding: 8px 6px 6px 6px;
-  font-size: 0.75rem;
+  padding: 10px 6px 8px 6px;
+  font-size: 0.7rem;
   font-weight: 600;
   text-align: center;
   z-index: 15;
+  pointer-events: none;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Movie metadata (additional info when sorting) */
+.movie-metadata {
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.6) 70%, transparent 100%);
+  color: #fff;
+  padding: 6px 6px 4px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  z-index: 14;
   pointer-events: none;
   letter-spacing: 0.3px;
 }

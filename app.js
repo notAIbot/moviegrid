@@ -396,8 +396,14 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
     div.appendChild(oscarBadge);
   }
 
-  // Add sort metadata below poster if sortCriteria is provided
-  if (sortCriteria && sortCriteria !== 'added') {
+  // Always display movie title at the bottom
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'movie-title';
+  titleDiv.textContent = title || 'N/A';
+  div.appendChild(titleDiv);
+
+  // Add additional sort metadata if sorting by other criteria
+  if (sortCriteria && sortCriteria !== 'added' && sortCriteria !== 'title') {
     const metadataDiv = document.createElement('div');
     metadataDiv.className = 'movie-metadata';
 
@@ -413,11 +419,6 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
         const releaseDate = movieData.release_date || movieData.releaseDate || '';
         const year = releaseDate ? releaseDate.substring(0, 4) : 'N/A';
         metadataText = `📅 ${year}`;
-        break;
-
-      case 'title':
-        // Display the movie title
-        metadataText = title || 'N/A';
         break;
 
       case 'runtime':
@@ -961,7 +962,7 @@ function renderFavoritesGrid(sortedMovies = null, sortCriteria = null) {
 
   // Get current sort criteria if not provided
   if (!sortCriteria) {
-    sortCriteria = localStorage.getItem('sort_favorites') || 'added';
+    sortCriteria = localStorage.getItem('sort_favorites') || 'rating';
   }
 
   // Create poster elements with action buttons
@@ -1044,7 +1045,7 @@ function renderWatchlistGrid(sortedMovies = null, sortCriteria = null) {
 
   // Get current sort criteria if not provided
   if (!sortCriteria) {
-    sortCriteria = localStorage.getItem('sort_watchlist') || 'added';
+    sortCriteria = localStorage.getItem('sort_watchlist') || 'rating';
   }
 
   // Create poster elements with action buttons
@@ -1401,24 +1402,16 @@ function switchTab(tabName) {
     loadTMDBTop100();
   } else if (tabName === 'favorites') {
     // Apply saved sort preference
-    const savedSort = localStorage.getItem('sort_favorites') || 'added';
-    if (savedSort !== 'added') {
-      const favoritesArray = Object.values(gridState.tabs.favorites.movies);
-      const sortedMovies = sortMovies(favoritesArray, savedSort);
-      renderFavoritesGrid(sortedMovies, savedSort);
-    } else {
-      renderFavoritesGrid(null, savedSort);
-    }
+    const savedSort = localStorage.getItem('sort_favorites') || 'rating';
+    const favoritesArray = Object.values(gridState.tabs.favorites.movies);
+    const sortedMovies = sortMovies(favoritesArray, savedSort);
+    renderFavoritesGrid(sortedMovies, savedSort);
   } else if (tabName === 'watchlist') {
     // Apply saved sort preference
-    const savedSort = localStorage.getItem('sort_watchlist') || 'added';
-    if (savedSort !== 'added') {
-      const watchlistArray = Object.values(gridState.tabs.watchlist.movies);
-      const sortedMovies = sortMovies(watchlistArray, savedSort);
-      renderWatchlistGrid(sortedMovies, savedSort);
-    } else {
-      renderWatchlistGrid(null, savedSort);
-    }
+    const savedSort = localStorage.getItem('sort_watchlist') || 'rating';
+    const watchlistArray = Object.values(gridState.tabs.watchlist.movies);
+    const sortedMovies = sortMovies(watchlistArray, savedSort);
+    renderWatchlistGrid(sortedMovies, savedSort);
   }
 
   console.log(`Switched to tab: ${tabName}`);
