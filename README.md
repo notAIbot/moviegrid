@@ -26,6 +26,7 @@ MovieGrid is a free, open-source web app that transforms movie lists into beauti
 
 ### 📅 Top 10 by Year
 - Select any year from 1900 to present
+- Movies load automatically when you change the year
 - Discover top-rated movies from that year
 - Explore cinema history decade by decade
 - Cached results for instant access

@@ -30,7 +30,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 - html2canvas for high-resolution PNG image export
 - Responsive CSS Grid layout
 
-## Current Status - WHERE WE ARE NOW (Jan 12, 2026 - Session 7)
+## Current Status - WHERE WE ARE NOW (Jan 19, 2026 - Session 8)
 
 ### 🎉 LIVE ON GITHUB PAGES!
 **URL:** https://notAIbot.github.io/moviegrid/
@@ -302,9 +302,9 @@ const gridState = {
 
 ## Next Steps for Next Session
 
-### 🚀 START HERE (Session 7):
+### 🚀 START HERE (Session 9):
 
-**Screenshot feature complete! All major features done. Next, polish and document:**
+**Recent improvements complete (auto-load, z-index fixes). Continue polish and documentation:**
 
 1. **Phase 9: Polish & Testing**
    - Test screenshot on mobile devices (different browsers)
@@ -566,6 +566,31 @@ const gridState = {
   - Commit and push only after confirming fixes work
   - User preference for local testing before deployment
 
+**Jan 19, 2026 (Session 8 - UX Improvements & Git Workflow):**
+- Fixed z-index issue with action buttons:
+  - Favorite (heart) and watchlist (clipboard) buttons were hidden behind movie title and ratings overlay
+  - Increased z-index from 10 to 20 to ensure buttons appear above title (z-index: 15) and metadata (z-index: 14)
+  - Buttons now fully clickable and visible on hover without obstruction
+- Improved Top 10 by Year UX:
+  - Removed "Load Movies" button - unnecessary friction point
+  - Movies now auto-load when year is selected from dropdown
+  - Tab also auto-loads movies on first open with selected year
+  - Updated yearSelect change event to trigger loadMoviesByYear()
+  - Added topByYear auto-load in switchTab() function
+  - Cleaner, more intuitive user experience
+- Established Git Workflow guidelines:
+  - Added requirement to ask permission before git operations (add, commit, push)
+  - Exception: Only proceed automatically when user explicitly requests it
+  - User prefers to control when code is deployed to GitHub Pages
+  - Documented in CLAUDE.md Git Workflow section
+- Code cleanup:
+  - Removed all loadYearBtn references and event listeners from app.js
+  - Removed button HTML from index.html
+  - Cleaned up function to remove disabled button state management
+- User feedback integration:
+  - Reinforced importance of explicit permission for git operations
+  - User expects to control deployment timing for live site
+
 ## Known Issues
 - Public API key means rate limits are shared across all users
 - TMDB Top 100 fetches movies by popularity, not by actual IMDB/TMDB top ratings (API limitation)
@@ -580,11 +605,11 @@ Full detailed plan: See git history and commit messages for implementation detai
 - **Remote:** https://github.com/notAIbot/moviegrid.git
 - **GitHub Pages:** ✅ LIVE at https://notAIbot.github.io/moviegrid/
 - **Latest Commits:**
+  - `bd1f3c5` - Remove Load Movies button and add Git Workflow guidelines (Session 8)
+  - `e572f04` - Fix action buttons hidden behind movie title and ratings overlay (Session 8)
+  - `986d79e` - Fix CORS blocking issue - remove crossOrigin from poster images (Session 7)
   - `752f6b5` - Add optional custom title prompt on image export (Session 7)
-  - `8c08e64` - Revert "Add custom title feature for Favorites and Watchlist tabs" (Session 7)
   - `18183f7` - Fix image export by setting crossOrigin on img elements (Session 7)
-  - `362e694` - Switch from PDF to PNG image export (Session 7)
-  - `fed696f` - Show detailed error list for failed movie imports (Session 6)
 
 ## Future Ideas (Post-MVP)
 - ✅ ~~Share grids as images~~ (DONE - PNG export with optional custom title, adaptive 1x-3x resolution)
