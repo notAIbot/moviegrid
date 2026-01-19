@@ -48,7 +48,7 @@ const STORAGE_KEYS = {
   LAST_YEAR: 'moviegrid_last_year',
   CUSTOM_TITLE: 'moviegrid_custom_title',
   CUSTOM_INPUT: 'moviegrid_custom_input',
-  OSCAR_CACHE: 'moviegrid_oscar_cache'
+  OSCAR_CACHE: 'moviegrid_oscar_cache_v2' // v2: changed emoji to image
 };
 
 // ===== ERROR HANDLING FRAMEWORK =====
@@ -191,7 +191,7 @@ async function fetchOscarData(imdbId) {
       // Extract Oscar wins from Awards string
       // Example: "Won 11 Oscars. 126 wins & 84 nominations total"
       const oscarMatch = data.Awards.match(/Won (\d+) Oscar/i);
-      const oscarData = oscarMatch ? `🏆 Won ${oscarMatch[1]} Oscar${oscarMatch[1] !== '1' ? 's' : ''}` : null;
+      const oscarData = oscarMatch ? `<img src="oscar_trophy.png" class="oscar-icon-inline" alt="Oscar"> Won ${oscarMatch[1]} Oscar${oscarMatch[1] !== '1' ? 's' : ''}` : null;
 
       // Cache the result (even if null)
       saveToOscarCache(imdbId, oscarData);
@@ -438,7 +438,7 @@ async function showMovieTooltip(event, title, overview, movieId = null) {
     if (oscarInfo) {
       const oscarEl = document.createElement('div');
       oscarEl.className = 'oscar-info';
-      oscarEl.textContent = oscarInfo;
+      oscarEl.innerHTML = oscarInfo;
       tooltip.appendChild(titleEl);
       tooltip.appendChild(oscarEl);
     } else {

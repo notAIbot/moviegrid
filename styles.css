@@ -677,6 +677,14 @@ button:disabled {
   text-align: center;
 }
 
+.oscar-icon-inline {
+  width: 14px;
+  height: 20px;
+  vertical-align: middle;
+  margin-right: 4px;
+  filter: brightness(1.2) contrast(1.1);
+}
+
 .movie-tooltip p {
   margin: 0;
   font-size: 0.8rem;
