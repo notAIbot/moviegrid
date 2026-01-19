@@ -572,6 +572,23 @@ button:disabled {
   filter: brightness(1.2) contrast(1.1);
 }
 
+/* Movie metadata (displayed when sorting) */
+.movie-metadata {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+  color: #fff;
+  padding: 8px 6px 6px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  z-index: 4;
+  pointer-events: none;
+  letter-spacing: 0.3px;
+}
+
 /* Action buttons on movie posters */
 .movie-actions {
   position: absolute;

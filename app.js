@@ -289,7 +289,7 @@ async function searchMovie(title) {
 // ===== UI HELPER FUNCTIONS =====
 
 // Create movie poster element
-function createMoviePoster(posterUrl, title, movieId, showActions = false, overview = '', hasOscars = false) {
+function createMoviePoster(posterUrl, title, movieId, showActions = false, overview = '', hasOscars = false, sortCriteria = null, movieData = {}) {
   const div = document.createElement('div');
   div.className = 'movie-poster';
   div.dataset.movieId = movieId;
@@ -394,6 +394,57 @@ function createMoviePoster(posterUrl, title, movieId, showActions = false, overv
     oscarBadge.innerHTML = '<img src="oscar_trophy.png" alt="Oscar Winner">';
     oscarBadge.title = 'Oscar Winner';
     div.appendChild(oscarBadge);
+  }
+
+  // Add sort metadata below poster if sortCriteria is provided
+  if (sortCriteria && sortCriteria !== 'added') {
+    const metadataDiv = document.createElement('div');
+    metadataDiv.className = 'movie-metadata';
+
+    let metadataText = '';
+
+    switch (sortCriteria) {
+      case 'rating':
+        const rating = movieData.vote_average || movieData.rating || 0;
+        metadataText = `⭐ ${rating.toFixed(1)}`;
+        break;
+
+      case 'year':
+        const releaseDate = movieData.release_date || movieData.releaseDate || '';
+        const year = releaseDate ? releaseDate.substring(0, 4) : 'N/A';
+        metadataText = `📅 ${year}`;
+        break;
+
+      case 'title':
+        // Title is already visible, no need to show again
+        metadataText = '';
+        break;
+
+      case 'runtime':
+        const runtime = movieData.runtime || 0;
+        if (runtime > 0) {
+          const hours = Math.floor(runtime / 60);
+          const minutes = runtime % 60;
+          metadataText = hours > 0 ? `⏱️ ${hours}h ${minutes}m` : `⏱️ ${minutes}m`;
+        } else {
+          metadataText = '⏱️ N/A';
+        }
+        break;
+
+      case 'oscars':
+        const oscarCount = movieData.oscarCount || 0;
+        if (oscarCount > 0) {
+          metadataText = `🏆 ${oscarCount} Oscar${oscarCount !== 1 ? 's' : ''}`;
+        } else {
+          metadataText = '🏆 0 Oscars';
+        }
+        break;
+    }
+
+    if (metadataText) {
+      metadataDiv.textContent = metadataText;
+      div.appendChild(metadataDiv);
+    }
   }
 
   return div;
@@ -882,7 +933,7 @@ function showNotification(message) {
 }
 
 // Render favorites grid
-function renderFavoritesGrid(sortedMovies = null) {
+function renderFavoritesGrid(sortedMovies = null, sortCriteria = null) {
   const favoritesGrid = document.getElementById('favoritesGrid');
   const emptyState = document.getElementById('favoritesEmpty');
 
@@ -908,9 +959,14 @@ function renderFavoritesGrid(sortedMovies = null) {
     favorites.sort((a, b) => a.addedAt - b.addedAt);
   }
 
+  // Get current sort criteria if not provided
+  if (!sortCriteria) {
+    sortCriteria = localStorage.getItem('sort_favorites') || 'added';
+  }
+
   // Create poster elements with action buttons
   favorites.forEach(movie => {
-    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '', movie.hasOscars || false);
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '', movie.hasOscars || false, sortCriteria, movie);
 
     // Add action buttons
     const actionsDiv = document.createElement('div');
@@ -960,7 +1016,7 @@ function renderFavoritesGrid(sortedMovies = null) {
 }
 
 // Render watchlist grid
-function renderWatchlistGrid(sortedMovies = null) {
+function renderWatchlistGrid(sortedMovies = null, sortCriteria = null) {
   const watchlistGrid = document.getElementById('watchlistGrid');
   const emptyState = document.getElementById('watchlistEmpty');
 
@@ -986,9 +1042,14 @@ function renderWatchlistGrid(sortedMovies = null) {
     watchlist.sort((a, b) => a.addedAt - b.addedAt);
   }
 
+  // Get current sort criteria if not provided
+  if (!sortCriteria) {
+    sortCriteria = localStorage.getItem('sort_watchlist') || 'added';
+  }
+
   // Create poster elements with action buttons
   watchlist.forEach(movie => {
-    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '', movie.hasOscars || false);
+    const posterDiv = createMoviePoster(movie.posterUrl, movie.title, movie.id, false, movie.overview || '', movie.hasOscars || false, sortCriteria, movie);
 
     // Add action buttons
     const actionsDiv = document.createElement('div');
@@ -1340,23 +1401,23 @@ function switchTab(tabName) {
     loadTMDBTop100();
   } else if (tabName === 'favorites') {
     // Apply saved sort preference
-    const savedSort = localStorage.getItem('sort_favorites');
-    if (savedSort && savedSort !== 'added') {
+    const savedSort = localStorage.getItem('sort_favorites') || 'added';
+    if (savedSort !== 'added') {
       const favoritesArray = Object.values(gridState.tabs.favorites.movies);
       const sortedMovies = sortMovies(favoritesArray, savedSort);
-      renderFavoritesGrid(sortedMovies);
+      renderFavoritesGrid(sortedMovies, savedSort);
     } else {
-      renderFavoritesGrid();
+      renderFavoritesGrid(null, savedSort);
     }
   } else if (tabName === 'watchlist') {
     // Apply saved sort preference
-    const savedSort = localStorage.getItem('sort_watchlist');
-    if (savedSort && savedSort !== 'added') {
+    const savedSort = localStorage.getItem('sort_watchlist') || 'added';
+    if (savedSort !== 'added') {
       const watchlistArray = Object.values(gridState.tabs.watchlist.movies);
       const sortedMovies = sortMovies(watchlistArray, savedSort);
-      renderWatchlistGrid(sortedMovies);
+      renderWatchlistGrid(sortedMovies, savedSort);
     } else {
-      renderWatchlistGrid();
+      renderWatchlistGrid(null, savedSort);
     }
   }
 
@@ -1410,7 +1471,7 @@ if (sortImdbTop100) {
     const sortBy = e.target.value;
     const sortedMovies = sortMovies(gridState.tabs.imdbTop100.movies, sortBy);
     gridState.tabs.imdbTop100.movies = sortedMovies;
-    renderTMDBTop100Grid(sortedMovies);
+    renderTMDBTop100Grid(sortedMovies, sortBy);
     // Save preference to localStorage
     localStorage.setItem('sort_imdb_top100', sortBy);
   });
@@ -1428,7 +1489,7 @@ if (sortTopByYear) {
     const sortBy = e.target.value;
     const sortedMovies = sortMovies(gridState.tabs.topByYear.movies, sortBy);
     gridState.tabs.topByYear.movies = sortedMovies;
-    renderYearGrid(sortedMovies);
+    renderYearGrid(sortedMovies, sortBy);
     // Save preference to localStorage
     localStorage.setItem('sort_top_by_year', sortBy);
   });
@@ -1447,7 +1508,7 @@ if (sortFavorites) {
     // Convert favorites object to array
     const favoritesArray = Object.values(gridState.tabs.favorites.movies);
     const sortedMovies = sortMovies(favoritesArray, sortBy);
-    renderFavoritesGrid(sortedMovies);
+    renderFavoritesGrid(sortedMovies, sortBy);
     // Save preference to localStorage
     localStorage.setItem('sort_favorites', sortBy);
   });
@@ -1466,7 +1527,7 @@ if (sortWatchlist) {
     // Convert watchlist object to array
     const watchlistArray = Object.values(gridState.tabs.watchlist.movies);
     const sortedMovies = sortMovies(watchlistArray, sortBy);
-    renderWatchlistGrid(sortedMovies);
+    renderWatchlistGrid(sortedMovies, sortBy);
     // Save preference to localStorage
     localStorage.setItem('sort_watchlist', sortBy);
   });
@@ -1527,16 +1588,21 @@ async function fetchTopMoviesByYear(year) {
 }
 
 // Render year grid
-function renderYearGrid(movies) {
+function renderYearGrid(movies, sortCriteria = null) {
   const yearGrid = document.getElementById('yearGrid');
   if (!yearGrid) return;
 
   // Clear existing grid
   yearGrid.innerHTML = '';
 
+  // Get current sort criteria if not provided
+  if (!sortCriteria) {
+    sortCriteria = localStorage.getItem('sort_top_by_year') || 'rating';
+  }
+
   // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '', movie.hasOscars || false);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '', movie.hasOscars || false, sortCriteria, movie);
     yearGrid.appendChild(posterElement);
   });
 
@@ -1570,13 +1636,13 @@ async function loadMoviesByYear() {
       gridState.tabs.topByYear.movies = movies;
 
       // Apply saved sort preference if any
-      const savedSort = localStorage.getItem('sort_top_by_year');
-      if (savedSort && savedSort !== 'rating') {
+      const savedSort = localStorage.getItem('sort_top_by_year') || 'rating';
+      if (savedSort !== 'rating') {
         movies = sortMovies(movies, savedSort);
         gridState.tabs.topByYear.movies = movies;
       }
 
-      renderYearGrid(movies);
+      renderYearGrid(movies, savedSort);
       console.log(`Loaded ${movies.length} movies from cache for year ${selectedYear}`);
       return;
     } catch (e) {
@@ -1617,13 +1683,13 @@ async function loadMoviesByYear() {
     gridState.tabs.topByYear.year = selectedYear;
 
     // Apply saved sort preference if any
-    const savedSort = localStorage.getItem('sort_top_by_year');
-    if (savedSort && savedSort !== 'rating') {
+    const savedSort = localStorage.getItem('sort_top_by_year') || 'rating';
+    if (savedSort !== 'rating') {
       const sortedMovies = sortMovies(movies, savedSort);
       gridState.tabs.topByYear.movies = sortedMovies;
-      renderYearGrid(sortedMovies);
+      renderYearGrid(sortedMovies, savedSort);
     } else {
-      renderYearGrid(movies);
+      renderYearGrid(movies, savedSort);
     }
 
     // Hide progress
@@ -1837,16 +1903,21 @@ async function fetchTMDBTop100() {
 }
 
 // Render TMDB Top 100 grid
-function renderTMDBTop100Grid(movies) {
+function renderTMDBTop100Grid(movies, sortCriteria = null) {
   const imdbGrid = document.getElementById('imdbGrid');
   if (!imdbGrid) return;
 
   // Clear existing grid
   imdbGrid.innerHTML = '';
 
+  // Get current sort criteria if not provided
+  if (!sortCriteria) {
+    sortCriteria = localStorage.getItem('sort_imdb_top100') || 'rating';
+  }
+
   // Create poster elements with action buttons
   movies.forEach(movie => {
-    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '', movie.hasOscars || false);
+    const posterElement = createMoviePoster(movie.posterPath, movie.title, movie.id, true, movie.overview || '', movie.hasOscars || false, sortCriteria, movie);
     imdbGrid.appendChild(posterElement);
   });
 
@@ -2034,13 +2105,13 @@ async function loadTMDBTop100() {
       gridState.tabs.imdbTop100.loaded = true;
 
       // Apply saved sort preference if any
-      const savedSort = localStorage.getItem('sort_imdb_top100');
-      if (savedSort && savedSort !== 'rating') {
+      const savedSort = localStorage.getItem('sort_imdb_top100') || 'rating';
+      if (savedSort !== 'rating') {
         movies = sortMovies(movies, savedSort);
         gridState.tabs.imdbTop100.movies = movies;
       }
 
-      renderTMDBTop100Grid(movies);
+      renderTMDBTop100Grid(movies, savedSort);
       console.log(`Loaded ${movies.length} movies from cache for TMDB Top 100`);
       return;
     } catch (e) {
@@ -2080,13 +2151,13 @@ async function loadTMDBTop100() {
     gridState.tabs.imdbTop100.loaded = true;
 
     // Apply saved sort preference if any
-    const savedSort = localStorage.getItem('sort_imdb_top100');
-    if (savedSort && savedSort !== 'rating') {
+    const savedSort = localStorage.getItem('sort_imdb_top100') || 'rating';
+    if (savedSort !== 'rating') {
       const sortedMovies = sortMovies(movies, savedSort);
       gridState.tabs.imdbTop100.movies = sortedMovies;
-      renderTMDBTop100Grid(sortedMovies);
+      renderTMDBTop100Grid(sortedMovies, savedSort);
     } else {
-      renderTMDBTop100Grid(movies);
+      renderTMDBTop100Grid(movies, savedSort);
     }
 
     // Hide progress
