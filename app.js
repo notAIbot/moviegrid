@@ -1536,6 +1536,14 @@ if (sortWatchlist) {
 // Always default to TMDB Top 100 tab on page load
 switchTab('imdbTop100');
 
+// Add event listener for floating help button
+const helpFloatingBtn = document.getElementById('helpFloatingBtn');
+if (helpFloatingBtn) {
+  helpFloatingBtn.addEventListener('click', () => {
+    switchTab('help');
+  });
+}
+
 // ===== TOP 10 BY YEAR (PHASE 8) =====
 
 // Fetch top 10 movies by year from TMDB Discover API
