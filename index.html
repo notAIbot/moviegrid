@@ -19,6 +19,9 @@
 
   <!-- jsPDF for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- QRCode.js for QR code generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -40,6 +43,9 @@
     <div class="tab-content" id="customTab">
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
+      </button>
+      <button class="share-btn" onclick="openShareModal()">
+        🔗 Share Grid
       </button>
       <div class="input-section">
       <h2>Paste Your Movie List</h2>
@@ -110,6 +116,9 @@ The Dark Knight"></textarea>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
       </button>
+      <button class="share-btn" onclick="openShareModal()">
+        🔗 Share Grid
+      </button>
       <div class="year-selector">
         <label for="yearSelect">Select Year:</label>
         <select id="yearSelect">
@@ -140,6 +149,9 @@ The Dark Knight"></textarea>
       </div>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
+      </button>
+      <button class="share-btn" onclick="openShareModal()">
+        🔗 Share Grid
       </button>
       <div class="sort-controls">
         <label for="sortFavorites">Sort by:</label>
@@ -187,6 +199,9 @@ Inception"></textarea>
       </div>
       <button class="screenshot-btn" onclick="captureGridScreenshot()">
         📸 Download as Image
+      </button>
+      <button class="share-btn" onclick="openShareModal()">
+        🔗 Share Grid
       </button>
       <div class="sort-controls">
         <label for="sortWatchlist">Sort by:</label>
@@ -539,6 +554,71 @@ The Batman"></textarea>
 
           <p class="help-credit">Created by <a href="https://github.com/notAIbot" target="_blank">notAIbot</a> with ❤️ for movie lovers everywhere</p>
         </section>
+      </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeShareModal()">&times;</span>
+
+        <h2>📤 Share Your Grid</h2>
+        <p class="modal-subtitle">Share this grid with friends via link, QR code, or social media</p>
+
+        <!-- Custom Title Input (optional) -->
+        <div class="share-option">
+          <label for="shareTitle">Custom Title (optional):</label>
+          <input type="text" id="shareTitle" class="share-title-input" placeholder="e.g., My Top 50 Movies">
+        </div>
+
+        <!-- Edit Permission Toggle -->
+        <div class="share-option">
+          <label class="checkbox-label">
+            <input type="checkbox" id="shareEditable">
+            <span>Allow others to edit this grid</span>
+          </label>
+          <p class="option-hint">If checked, recipients can add/remove movies and reorder</p>
+        </div>
+
+        <!-- Generated URL -->
+        <div class="share-url-section">
+          <label>Share Link:</label>
+          <div class="url-display">
+            <input type="text" id="shareUrlInput" readonly>
+            <button class="copy-btn" onclick="copyShareURL()">
+              📋 Copy
+            </button>
+          </div>
+          <p class="url-length" id="urlLength"></p>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qr-section">
+          <h3>QR Code</h3>
+          <div id="qrCanvas"></div>
+          <button class="download-qr-btn" onclick="downloadQR()">
+            📥 Download QR Code
+          </button>
+        </div>
+
+        <!-- Social Share Buttons -->
+        <div class="social-share">
+          <h3>Share On</h3>
+          <div class="social-buttons">
+            <button class="social-btn twitter-btn" onclick="shareOnTwitter()">
+              𝕏 Twitter
+            </button>
+            <button class="social-btn facebook-btn" onclick="shareOnFacebook()">
+              👍 Facebook
+            </button>
+            <button class="social-btn linkedin-btn" onclick="shareOnLinkedIn()">
+              💼 LinkedIn
+            </button>
+            <button class="social-btn email-btn" onclick="shareViaEmail()">
+              ✉️ Email
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

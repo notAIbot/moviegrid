@@ -2549,6 +2549,649 @@ async function captureGridScreenshot() {
   }
 }
 
+// ===== URL SHARING FUNCTIONALITY =====
+
+let currentShareURL = '';
+
+/**
+ * Generate shareable URL for current grid
+ * @param {string} tabName - Tab to share ('custom', 'favorites', 'watchlist', 'topByYear')
+ * @param {object} options - { editable: boolean, customTitle: string }
+ * @returns {string} Shareable URL
+ */
+function generateShareURL(tabName, options = {}) {
+  const { editable = false, customTitle = null } = options;
+
+  // Get movie IDs from active tab
+  let movieIds = [];
+  let year = null;
+
+  switch (tabName) {
+    case 'custom':
+      movieIds = gridState.tabs.custom.movies
+        .map(m => m.id)
+        .filter(id => id !== null && id !== undefined);
+      break;
+
+    case 'favorites':
+      movieIds = Object.keys(gridState.tabs.favorites.movies).map(id => parseInt(id));
+      break;
+
+    case 'watchlist':
+      movieIds = Object.keys(gridState.tabs.watchlist.movies).map(id => parseInt(id));
+      break;
+
+    case 'topByYear':
+      movieIds = gridState.tabs.topByYear.movies
+        .map(m => m.id)
+        .filter(id => id !== null && id !== undefined);
+      year = gridState.tabs.topByYear.year;
+      break;
+
+    default:
+      throw new Error('Invalid tab for sharing');
+  }
+
+  // Check if grid is empty
+  if (movieIds.length === 0) {
+    throw new Error('Cannot share empty grid');
+  }
+
+  // Check URL length limit (warn if > 100 movies)
+  if (movieIds.length > 200) {
+    throw new Error('Too many movies to share via URL. Maximum is 200 movies. Consider downloading as image instead.');
+  }
+
+  // Deduplicate movie IDs while preserving order
+  movieIds = [...new Set(movieIds)];
+
+  // Build share data object
+  const shareData = {
+    v: 1,                                    // version
+    t: tabName === 'topByYear' ? 'year' : tabName,
+    ids: movieIds
+  };
+
+  // Add optional fields
+  if (customTitle) {
+    shareData.title = customTitle.trim();
+  }
+
+  if (editable) {
+    shareData.edit = true;
+  }
+
+  if (year) {
+    shareData.year = year;
+  }
+
+  // Encode as Base64 JSON
+  const jsonString = JSON.stringify(shareData);
+  const base64 = btoa(jsonString);
+
+  // Generate full URL
+  const baseUrl = window.location.origin + window.location.pathname;
+  const shareUrl = `${baseUrl}?share=${base64}`;
+
+  // Log URL length for debugging
+  console.log(`Share URL length: ${shareUrl.length} chars (${movieIds.length} movies)`);
+
+  return shareUrl;
+}
+
+/**
+ * Parse share URL and return share data
+ * @param {string} urlString - URL to parse
+ * @returns {object|null} Share data object or null if invalid
+ */
+function parseShareURL(urlString) {
+  try {
+    const url = new URL(urlString);
+    const shareParam = url.searchParams.get('share');
+
+    if (!shareParam) {
+      return null;
+    }
+
+    // Decode Base64
+    const jsonString = atob(shareParam);
+    const shareData = JSON.parse(jsonString);
+
+    // Validate structure
+    if (!shareData.v || !shareData.t || !Array.isArray(shareData.ids)) {
+      console.error('Invalid share data structure');
+      return null;
+    }
+
+    // Validate version
+    if (shareData.v !== 1) {
+      console.warn('Unsupported share URL version:', shareData.v);
+      return null;
+    }
+
+    return shareData;
+
+  } catch (error) {
+    console.error('Failed to parse share URL:', error);
+    return null;
+  }
+}
+
+/**
+ * Hydrate movies from TMDB IDs
+ * @param {array} movieIds - Array of TMDB movie IDs
+ * @returns {Promise<array>} Array of movie data objects
+ */
+async function hydrateMoviesFromIDs(movieIds) {
+  const movies = [];
+  const failedIds = [];
+
+  // Show progress
+  const progressMsg = `Loading ${movieIds.length} movies from shared link...`;
+  showNotification(progressMsg);
+
+  for (let i = 0; i < movieIds.length; i++) {
+    const movieId = movieIds[i];
+
+    try {
+      // Rate limiting
+      await rateLimiter.throttle();
+
+      // Fetch movie details from TMDB
+      const detailsUrl = `${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}`;
+      const response = await fetch(detailsUrl);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch movie ${movieId}`);
+      }
+
+      const data = await response.json();
+
+      // Fetch Oscar data
+      let oscarData = null;
+      try {
+        const externalIdsUrl = `${TMDB_BASE_URL}/movie/${movieId}/external_ids?api_key=${TMDB_API_KEY}`;
+        const externalIdsResponse = await fetch(externalIdsUrl);
+        if (externalIdsResponse.ok) {
+          const externalIds = await externalIdsResponse.json();
+          if (externalIds.imdb_id) {
+            oscarData = await fetchOscarData(externalIds.imdb_id);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch Oscar data for movie', movieId, error);
+      }
+
+      // Build movie object
+      movies.push({
+        id: data.id,
+        title: data.title,
+        posterPath: data.poster_path ? `${TMDB_IMAGE_BASE_URL}${data.poster_path}` : null,
+        posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}${data.poster_path}` : null,
+        overview: data.overview || 'No overview available.',
+        releaseDate: data.release_date,
+        release_date: data.release_date,
+        rating: data.vote_average,
+        vote_average: data.vote_average,
+        runtime: data.runtime || 0,
+        hasOscars: oscarData !== null,
+        oscarCount: oscarData ? oscarData.count : 0
+      });
+
+    } catch (error) {
+      console.warn(`Failed to hydrate movie ${movieId}:`, error.message);
+      failedIds.push(movieId);
+    }
+  }
+
+  if (failedIds.length > 0) {
+    console.warn(`Failed to load ${failedIds.length} movies:`, failedIds);
+    showNotification(`Loaded ${movies.length} of ${movieIds.length} movies`);
+  }
+
+  return movies;
+}
+
+/**
+ * Load shared grid from URL on page load
+ */
+async function loadSharedGrid() {
+  // Check if URL has share parameter
+  const shareData = parseShareURL(window.location.href);
+
+  if (!shareData) {
+    return; // No shared URL, proceed normally
+  }
+
+  console.log('Loading shared grid:', shareData);
+
+  // Show loading state
+  showNotification('Loading shared grid...');
+
+  try {
+    // Hydrate movies from IDs
+    const movies = await hydrateMoviesFromIDs(shareData.ids);
+
+    if (movies.length === 0) {
+      throw new Error('No movies could be loaded from shared link');
+    }
+
+    // Populate appropriate tab based on share type
+    switch (shareData.t) {
+      case 'custom':
+        gridState.tabs.custom.movies = movies;
+        if (shareData.title) {
+          gridState.tabs.custom.customTitle = shareData.title;
+          document.getElementById('customTitle').value = shareData.title;
+        }
+        switchTab('custom');
+
+        // Render grid
+        const movieGrid = document.getElementById('movieGrid');
+        movieGrid.innerHTML = '';
+        movies.forEach(movie => {
+          const posterElement = createMoviePoster(movie.posterUrl, movie.title, movie.id, !shareData.edit, movie.overview, movie.hasOscars);
+          movieGrid.appendChild(posterElement);
+        });
+
+        // Update title
+        if (shareData.title) {
+          document.getElementById('gridTitle').textContent = shareData.title;
+          document.getElementById('gridTitle').classList.add('active');
+        }
+
+        document.getElementById('outputSection').classList.add('active');
+        initializeSortable();
+        break;
+
+      case 'favorites':
+        // Populate favorites (show as read-only if not editable)
+        movies.forEach(movie => {
+          gridState.tabs.favorites.movies[movie.id] = {
+            ...movie,
+            addedAt: Date.now()
+          };
+        });
+
+        switchTab('favorites');
+        renderFavoritesGrid();
+
+        // Show banner if read-only
+        if (!shareData.edit) {
+          showSharedBanner('favorites', shareData.title);
+        }
+        break;
+
+      case 'watchlist':
+        // Populate watchlist
+        movies.forEach(movie => {
+          gridState.tabs.watchlist.movies[movie.id] = {
+            ...movie,
+            addedAt: Date.now()
+          };
+        });
+
+        switchTab('watchlist');
+        renderWatchlistGrid();
+
+        // Show banner if read-only
+        if (!shareData.edit) {
+          showSharedBanner('watchlist', shareData.title);
+        }
+        break;
+
+      case 'year':
+        gridState.tabs.topByYear.movies = movies;
+        gridState.tabs.topByYear.year = shareData.year;
+
+        // Update year selector
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect) {
+          yearSelect.value = shareData.year;
+        }
+
+        switchTab('topByYear');
+        renderYearGrid(movies);
+        break;
+
+      default:
+        throw new Error('Unknown share type: ' + shareData.t);
+    }
+
+    showNotification(`Shared grid loaded! (${movies.length} movies)`);
+
+    // Remove share parameter from URL (clean up history)
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+
+  } catch (error) {
+    console.error('Failed to load shared grid:', error);
+    showNotification('Failed to load shared grid. Please try again.');
+  }
+}
+
+/**
+ * Show banner indicating this is a shared grid
+ */
+function showSharedBanner(tabType, customTitle) {
+  const tabElement = document.getElementById(tabType === 'favorites' ? 'favoritesTab' : 'watchlistTab');
+  if (!tabElement) return;
+
+  // Remove existing banner if any
+  const existingBanner = tabElement.querySelector('.shared-banner');
+  if (existingBanner) {
+    existingBanner.remove();
+  }
+
+  // Create banner
+  const banner = document.createElement('div');
+  banner.className = 'shared-banner';
+  banner.innerHTML = `
+    <p>
+      <strong>📤 Shared Grid${customTitle ? ': ' + customTitle : ''}</strong><br>
+      You're viewing a shared ${tabType === 'favorites' ? 'favorites' : 'watchlist'} grid (read-only).
+      <button class="save-to-my-btn" onclick="saveSharedToMy('${tabType}')">
+        💾 Save to My ${tabType === 'favorites' ? 'Favorites' : 'Watchlist'}
+      </button>
+    </p>
+  `;
+
+  // Insert banner at the top of tab
+  const tabHeader = tabElement.querySelector('.tab-header');
+  if (tabHeader) {
+    tabHeader.after(banner);
+  } else {
+    tabElement.insertBefore(banner, tabElement.firstChild);
+  }
+}
+
+/**
+ * Save shared grid to user's own collection
+ */
+function saveSharedToMy(tabType) {
+  const sourceMovies = tabType === 'favorites'
+    ? gridState.tabs.favorites.movies
+    : gridState.tabs.watchlist.movies;
+
+  const count = Object.keys(sourceMovies).length;
+
+  const confirmed = confirm(
+    `Save ${count} movies from this shared grid to your own ${tabType}?\n\n` +
+    `This will add them to your personal collection.`
+  );
+
+  if (!confirmed) return;
+
+  // Movies are already in state, just need to persist to localStorage
+  if (tabType === 'favorites') {
+    saveFavoritesToStorage();
+  } else {
+    saveWatchlistToStorage();
+  }
+
+  showNotification(`Saved ${count} movies to your ${tabType}!`);
+
+  // Remove banner
+  const banner = document.querySelector('.shared-banner');
+  if (banner) {
+    banner.remove();
+  }
+}
+
+// ===== SHARE MODAL FUNCTIONS =====
+
+/**
+ * Open share modal for current tab
+ */
+function openShareModal() {
+  const activeTab = gridState.activeTab;
+
+  // Validate tab can be shared
+  if (!['custom', 'favorites', 'watchlist', 'topByYear'].includes(activeTab)) {
+    showNotification('This tab cannot be shared');
+    return;
+  }
+
+  // Check if grid is empty
+  let movieCount = 0;
+  switch (activeTab) {
+    case 'custom':
+      movieCount = gridState.tabs.custom.movies.filter(m => m.id).length;
+      break;
+    case 'favorites':
+      movieCount = Object.keys(gridState.tabs.favorites.movies).length;
+      break;
+    case 'watchlist':
+      movieCount = Object.keys(gridState.tabs.watchlist.movies).length;
+      break;
+    case 'topByYear':
+      movieCount = gridState.tabs.topByYear.movies.length;
+      break;
+  }
+
+  if (movieCount === 0) {
+    showNotification('Cannot share empty grid');
+    return;
+  }
+
+  // Pre-fill title if available
+  const shareTitleInput = document.getElementById('shareTitle');
+  if (activeTab === 'custom') {
+    shareTitleInput.value = gridState.tabs.custom.customTitle || '';
+  } else {
+    shareTitleInput.value = '';
+  }
+
+  // Generate initial URL
+  updateShareURL();
+
+  // Show modal
+  document.getElementById('shareModal').classList.add('show');
+}
+
+/**
+ * Close share modal
+ */
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('show');
+}
+
+/**
+ * Update share URL based on current settings
+ */
+function updateShareURL() {
+  const activeTab = gridState.activeTab;
+  const customTitle = document.getElementById('shareTitle').value.trim();
+  const editable = document.getElementById('shareEditable').checked;
+
+  try {
+    // Generate URL
+    const shareUrl = generateShareURL(activeTab, {
+      editable,
+      customTitle: customTitle || null
+    });
+
+    currentShareURL = shareUrl;
+
+    // Display URL
+    document.getElementById('shareUrlInput').value = shareUrl;
+
+    // Show URL length
+    const urlLength = document.getElementById('urlLength');
+    urlLength.textContent = `${shareUrl.length} characters`;
+
+    if (shareUrl.length > 2000) {
+      urlLength.style.color = '#dc3545';
+      urlLength.textContent += ' ⚠️ URL may be too long for some browsers';
+    } else if (shareUrl.length > 1500) {
+      urlLength.style.color = '#ffc107';
+      urlLength.textContent += ' ⚠️ Consider sharing fewer movies';
+    } else {
+      urlLength.style.color = '#28a745';
+    }
+
+    // Generate QR code
+    generateQRCode(shareUrl);
+
+  } catch (error) {
+    console.error('Failed to generate share URL:', error);
+    showNotification('Failed to generate share link: ' + error.message);
+  }
+}
+
+/**
+ * Copy share URL to clipboard
+ */
+async function copyShareURL() {
+  const urlInput = document.getElementById('shareUrlInput');
+
+  try {
+    // Modern clipboard API
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(currentShareURL);
+    } else {
+      // Fallback for older browsers
+      urlInput.select();
+      document.execCommand('copy');
+    }
+
+    // Visual feedback
+    const copyBtn = event.target;
+    const originalText = copyBtn.textContent;
+    copyBtn.textContent = '✅ Copied!';
+    copyBtn.style.background = '#28a745';
+
+    setTimeout(() => {
+      copyBtn.textContent = originalText;
+      copyBtn.style.background = '';
+    }, 2000);
+
+    showNotification('Link copied to clipboard!');
+
+  } catch (error) {
+    console.error('Failed to copy URL:', error);
+    showNotification('Failed to copy link. Please copy manually.');
+  }
+}
+
+/**
+ * Generate QR code for share URL
+ */
+function generateQRCode(url) {
+  const canvas = document.getElementById('qrCanvas');
+
+  // Clear previous QR code
+  canvas.innerHTML = '';
+
+  // Use QRCode.js library
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(canvas, {
+      text: url,
+      width: 256,
+      height: 256,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } else {
+    console.warn('QRCode.js library not loaded');
+    canvas.textContent = 'QR code unavailable';
+  }
+}
+
+/**
+ * Download QR code as PNG
+ */
+function downloadQR() {
+  const canvas = document.querySelector('#qrCanvas canvas');
+
+  if (!canvas) {
+    showNotification('QR code not available');
+    return;
+  }
+
+  // Convert canvas to blob and download
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'moviegrid-qr-code.png';
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    showNotification('QR code downloaded!');
+  });
+}
+
+/**
+ * Share on Twitter
+ */
+function shareOnTwitter() {
+  const text = encodeURIComponent('Check out my movie grid on MovieGrid!');
+  const url = encodeURIComponent(currentShareURL);
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+
+  window.open(twitterUrl, '_blank', 'width=600,height=400');
+}
+
+/**
+ * Share on Facebook
+ */
+function shareOnFacebook() {
+  const url = encodeURIComponent(currentShareURL);
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+
+  window.open(facebookUrl, '_blank', 'width=600,height=400');
+}
+
+/**
+ * Share on LinkedIn
+ */
+function shareOnLinkedIn() {
+  const url = encodeURIComponent(currentShareURL);
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+
+  window.open(linkedInUrl, '_blank', 'width=600,height=400');
+}
+
+/**
+ * Share via Email
+ */
+function shareViaEmail() {
+  const subject = encodeURIComponent('Check out my MovieGrid!');
+  const body = encodeURIComponent(
+    `I thought you might enjoy this movie grid I created:\n\n${currentShareURL}\n\nCreated with MovieGrid: https://notAIbot.github.io/moviegrid/`
+  );
+
+  const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = mailtoUrl;
+}
+
+// Add event listeners for share modal inputs
+document.addEventListener('DOMContentLoaded', () => {
+  const shareTitle = document.getElementById('shareTitle');
+  const shareEditable = document.getElementById('shareEditable');
+
+  if (shareTitle) {
+    shareTitle.addEventListener('input', updateShareURL);
+  }
+
+  if (shareEditable) {
+    shareEditable.addEventListener('change', updateShareURL);
+  }
+
+  // Close modal when clicking outside
+  window.addEventListener('click', (event) => {
+    const modal = document.getElementById('shareModal');
+    if (event.target === modal) {
+      closeShareModal();
+    }
+  });
+
+  // Load shared grid if URL has share parameter
+  loadSharedGrid();
+});
+
 // ===== INITIALIZATION =====
 
 // Load favorites and watchlist from localStorage

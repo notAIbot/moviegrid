@@ -17,3 +17,6 @@ node_modules/
 
 # Cache directories
 .cache/
+
+# Personal/Draft files
+linkedin_post.txt
