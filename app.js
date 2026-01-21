@@ -2573,6 +2573,12 @@ function generateShareURL(tabName, options = {}) {
         .filter(id => id !== null && id !== undefined);
       break;
 
+    case 'imdbTop100':
+      movieIds = gridState.tabs.imdbTop100.movies
+        .map(m => m.id)
+        .filter(id => id !== null && id !== undefined);
+      break;
+
     case 'favorites':
       movieIds = Object.keys(gridState.tabs.favorites.movies).map(id => parseInt(id));
       break;
@@ -2804,6 +2810,15 @@ async function loadSharedGrid() {
         initializeSortable();
         break;
 
+      case 'imdbTop100':
+        // Populate TMDB Top 100
+        gridState.tabs.imdbTop100.movies = movies;
+        gridState.tabs.imdbTop100.loaded = true;
+
+        switchTab('imdbTop100');
+        renderTMDBTop100Grid(movies);
+        break;
+
       case 'favorites':
         // Populate favorites (show as read-only if not editable)
         movies.forEach(movie => {
@@ -2947,7 +2962,7 @@ function openShareModal() {
   const activeTab = gridState.activeTab;
 
   // Validate tab can be shared
-  if (!['custom', 'favorites', 'watchlist', 'topByYear'].includes(activeTab)) {
+  if (!['custom', 'imdbTop100', 'favorites', 'watchlist', 'topByYear'].includes(activeTab)) {
     showNotification('This tab cannot be shared');
     return;
   }
@@ -2957,6 +2972,9 @@ function openShareModal() {
   switch (activeTab) {
     case 'custom':
       movieCount = gridState.tabs.custom.movies.filter(m => m.id).length;
+      break;
+    case 'imdbTop100':
+      movieCount = gridState.tabs.imdbTop100.movies.length;
       break;
     case 'favorites':
       movieCount = Object.keys(gridState.tabs.favorites.movies).length;

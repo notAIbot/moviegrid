@@ -123,7 +123,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
 
 **Phase 9: Share Grid URLs (COMPLETED)**
 - [x] Added QRCode.js library for QR code generation
-- [x] Floating "🔗 Share Grid" button on Custom, Favorites, Watchlist, and Top by Year tabs
+- [x] Floating "🔗 Share Grid" button on all 5 tabs (Custom, TMDB Top 100, Top by Year, Favorites, Watchlist)
 - [x] Share modal with multiple sharing options
 - [x] Base64 JSON URL encoding (supports 100-200 movies per URL)
 - [x] Optional custom title for shared grids
@@ -157,6 +157,7 @@ Convert the existing BookGrid application (currently displays book covers) to Mo
   - Supports drag-and-drop reordering
   - Heart/clipboard icons to add to Favorites/Watchlist
   - Export as PNG image (adaptive 1x-3x resolution)
+  - Share grid via URL, QR code, or social media
 - **Top 10 by Year:**
   - Year selector dropdown (1900-2026)
   - Fetches top 10 movies for selected year
